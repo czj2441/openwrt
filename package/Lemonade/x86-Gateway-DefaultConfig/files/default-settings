@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# 使用于X86架构网关，双网口无无线
+
+# 网络信息配置
+# 配置LAN
+uci del network.lan
+uci add network interface
+uci rename network.@interface[-1]='lan'
+uci set network.lan.type='bridge'
+uci set network.lan.ifname='eth1'
+uci set network.lan.proto='static'
+uci set network.lan.ipaddr='192.168.8.1'
+uci set network.lan.gateway '192.168.8.1'
+uci set network.lan.netmask='255.255.255.0'
+uci set network.lan.ip6assign='64'
+# 配置WAN
+uci del network.wan
+uci add network interface
+uci rename network.@interface[-1]='wan'
+uci set network.wan.ifname='eth0'
+uci set network.wan.proto='pppoe'
+uci set network.wan.username="28142258"
+uci set network.wan.password="24253132"
+uci set network.wan.ipv6='auto'
+# 删除wan6
+uci del network.wan6
+# 保存设置
+uci commit network
+
+#详见： https://openwrt.org/docs/guide-developer/uci-defaults
+exit 0
