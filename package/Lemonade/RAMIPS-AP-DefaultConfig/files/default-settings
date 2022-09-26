@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# 使用于RAMIPS架构AP
+
+# 修改root密码
+sed -i '/root/d' /etc/shadow
+sed -i '1i\root:$1$eBFIgw7B$nvu44KTG1SIzokXTmvysX1:19260:0:99999:7:::' /etc/shadow
+
+# 配置系统时区
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci set system.@system[0].timezone='CST-8'
+uci set system.ntp.server=''
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='time.ustc.edu.cn'
+uci commit system
+
+# 配置LED
+uci add system led
+uci set system.@led[-1].name='Sys'
+uci set system.@led[-1].sysfs='white:sys'
+uci set system.@led[-1].trigger='heartbeat'
+uci set system.@led[-1].inverted='1'
+uci add system led
+uci set system.@led[-1].name='2.4G'
+uci set system.@led[-1].sysfs='mt76-phy0'
+uci set system.@led[-1].trigger='netdev'
+uci set system.@led[-1].dev='wlan0'
+uci set system.@led[-1].mode=''
+uci add_list system.@led[-1].mode='link'
+uci add_list system.@led[-1].mode='rx'
+uci add system led
+uci set system.@led[-1].name='5G'
+uci set system.@led[-1].sysfs='mt76-phy1'
+uci set system.@led[-1].trigger='netdev'
+uci set system.@led[-1].dev='wlan1'
+uci set system.@led[-1].mode=''
+uci add_list system.@led[-1].mode='link'
+uci add_list system.@led[-1].mode='rx'
+uci commit system
+
+# 配置无线
+uci set wireless.radio0.country='CN'
+uci set wireless.radio0.cell_density='0'
+uci set wireless.radio1.country='CN'
+uci set wireless.radio1.cell_density='0'
+uci set wireless.default_radio0.ssid='LemonadeAP'
+uci set wireless.default_radio0.encryption='psk2'
+uci set wireless.default_radio0.key='12345678'
+uci set wireless.default_radio1.ssid='LemonadeAP_5G'
+uci set wireless.default_radio1.encryption='psk2'
+uci set wireless.default_radio1.key='12345678'
+uci commit wireless
+
+#详见： https://openwrt.org/docs/guide-developer/uci-defaults
+exit 0

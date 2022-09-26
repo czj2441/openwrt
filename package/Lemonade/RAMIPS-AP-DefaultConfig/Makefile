@@ -1,11 +1,11 @@
 ##############################################
 # 
-# OpenWrt Makefile for x86 Gateway Default Settings
+# OpenWrt Makefile for RAMIPS AP Default Settings
 #
 ##############################################
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=x86-Gateway-DefaultConfig
+PKG_NAME:=RAMIPS-AP-DefaultConfig
 PKG_VERSION:=1.0
 PKG_RELEASE:=1
 
@@ -14,13 +14,13 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
   SECTION:=utils
   CATEGORY:=Lemonade
-  TITLE:=x86 Gateway Default Settings
+  TITLE:=RAMIPS AP Default Settings
   MAINTAINER:=Lemonade
   DEPENDS:=+luci-base +luci 
 endef
 
 define Package/$(PKG_NAME)/description
-        Lemonade's x86 Gateway Default Settings.
+        Lemonade's RAMIPS AP Default Settings.
 endef
 
 define Build/Prepare
