@@ -2,31 +2,128 @@
 
 # 使用于X86架构网关，双网口无无线
 
+# 修改root密码
+sed -i '/root/d' /etc/shadow
+sed -i '1i\root:$1$eBFIgw7B$nvu44KTG1SIzokXTmvysX1:19260:0:99999:7:::' /etc/shadow
+
+# 配置系统时区
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci set system.@system[0].timezone='CST-8'
+uci set system.ntp.server=''
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='time.ustc.edu.cn'
+uci commit system
+
 # 网络信息配置
+# 配置网桥
+uci del network.@device[-1]
+uci add network device
+uci set network.@device[-1].name='br-lan'
+uci set network.@device[-1].type='bridge'
+uci set network.@device[-1].ports='eth1'
+uci commit network
 # 配置LAN
 uci del network.lan
 uci add network interface
 uci rename network.@interface[-1]='lan'
-uci set network.lan.type='bridge'
-uci set network.lan.ifname='eth1'
 uci set network.lan.proto='static'
 uci set network.lan.ipaddr='192.168.8.1'
-uci set network.lan.gateway '192.168.8.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.ip6assign='64'
+uci set network.lan.device='br-lan'
+uci commit network
 # 配置WAN
 uci del network.wan
 uci add network interface
 uci rename network.@interface[-1]='wan'
-uci set network.wan.ifname='eth0'
 uci set network.wan.proto='pppoe'
 uci set network.wan.username="28142258"
 uci set network.wan.password="24253132"
-uci set network.wan.ipv6='auto'
-# 删除wan6
-uci del network.wan6
-# 保存设置
+uci set network.wan.ipv6='1'
+uci set network.wan.device='eth0'
 uci commit network
+# 配置wan6
+uci del network.wan6
+uci add network interface
+uci rename network.@interface[-1]='wan6'
+uci set network.wan6.proto='dhcpv6'
+uci set network.wan6.device='pppoe-wan'
+uci set network.wan6.reqaddress='try'
+uci set network.wan6.reqprefix='60'
+uci commit network
+
+# 配置防火墙
+# 端口转发配置
+uci add firewall redirect
+uci set firewall.@redirect[-1].target='DNAT'
+uci set firewall.@redirect[-1].src='wan'
+uci set firewall.@redirect[-1].dest='lan'
+uci set firewall.@redirect[-1].proto='tcp udp'
+uci set firewall.@redirect[-1].src_dport='81'
+uci set firewall.@redirect[-1].dest_ip='192.168.8.1'
+uci set firewall.@redirect[-1].dest_port='80'
+uci set firewall.@redirect[-1].name='Router-Web'
+uci commit firewall
+
+# Serverchan配置
+uci del serverchan.serverchan
+uci add serverchan serverchan
+uci rename serverchan.@serverchan[-1]='serverchan'
+uci set serverchan.serverchan.sleeptime='60'
+uci set serverchan.serverchan.serverchan_ipv6='0'
+uci set serverchan.serverchan.temperature_enable='0'
+uci set serverchan.serverchan.serverchan_enable='1'
+uci set serverchan.serverchan.jsonpath='/usr/bin/serverchan/api/pushplus.json'
+uci set serverchan.serverchan.pushplus_token='932d43efb790481eaab743968657383d'
+uci set serverchan.serverchan.device_name='Gateway'
+uci set serverchan.serverchan.oui_data='2'
+uci set serverchan.serverchan.reset_regularly='1'
+uci set serverchan.serverchan.debuglevel='1'
+uci set serverchan.serverchan.serverchan_ipv4='1'
+uci set serverchan.serverchan.ipv4_interface='pppoe-wan'
+uci set serverchan.serverchan.serverchan_up='0'
+uci set serverchan.serverchan.serverchan_down='0'
+uci set serverchan.serverchan.cpuload_enable='0'
+uci set serverchan.serverchan.client_usage='0'
+uci set serverchan.serverchan.web_logged='0'
+uci set serverchan.serverchan.ssh_logged='0'
+uci set serverchan.serverchan.web_login_failed='0'
+uci set serverchan.serverchan.ssh_login_failed='0'
+uci set serverchan.serverchan.crontab='2'
+uci set serverchan.serverchan.interval_time='1'
+uci set serverchan.serverchan.send_title='Gateway Status'
+uci set serverchan.serverchan.router_status='1'
+uci set serverchan.serverchan.router_temp='0'
+uci set serverchan.serverchan.router_wan='1'
+uci set serverchan.serverchan.client_list='1'
+uci commit serverchan
+
+# DDNS配置
+uci del ddns.myddns_ipv4
+uci del ddns.myddns_ipv6
+uci add ddns service
+uci rename ddns.@service[-1]='ebeam_vip'
+uci set ddns.@service[-1].service_name='dnspod.cn'
+uci set ddns.@service[-1].lookup_host='srv.ebeam.vip'
+uci set ddns.@service[-1].domain='srv.ebeam.vip'
+uci set ddns.@service[-1].username='224824'
+uci set ddns.@service[-1].password='702bae3c6a80988814d04f90b6d5dc61'
+uci set ddns.@service[-1].enabled='1'
+uci set ddns.@service[-1].force_ipversion='1'
+uci set ddns.@service[-1].use_syslog='3'
+uci add ddns service
+uci rename ddns.@service[-1]='agserver_cn'
+uci set ddns.@service[-1].service_name='dnspod.cn'
+uci set ddns.@service[-1].lookup_host='czj.agserver.cn'
+uci set ddns.@service[-1].domain='czj.agserver.cn'
+uci set ddns.@service[-1].username='207633'
+uci set ddns.@service[-1].password='c0e1f7b58653eae37d08c72fc80eb0bd'
+uci set ddns.@service[-1].enabled='1'
+uci set ddns.@service[-1].force_ipversion='1'
+uci set ddns.@service[-1].use_syslog='3'
+uci set ddns.@service[-1].ip_source='interface'
+uci set ddns.@service[-1].ip_interface='pppoe-wan'
+uci commit ddns
 
 #详见： https://openwrt.org/docs/guide-developer/uci-defaults
 exit 0
