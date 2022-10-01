@@ -4,7 +4,7 @@
 
 # 修改root密码
 sed -i '/root/d' /etc/shadow
-sed -i '1i\root:$1$eBFIgw7B$nvu44KTG1SIzokXTmvysX1:19260:0:99999:7:::' /etc/shadow
+sed -i '1i\root:$1$jy0vKzHj$x0SPe/UmNxsePtAyIs4gd0:19266:0:99999:7:::' /etc/shadow #12345678
 
 # 配置系统时区
 uci set system.@system[0].zonename='Asia/Shanghai'
@@ -43,6 +43,7 @@ uci set wireless.radio0.country='CN'
 uci set wireless.radio0.cell_density='0'
 uci set wireless.radio1.country='CN'
 uci set wireless.radio1.cell_density='0'
+uci set wireless.radio1.channel='149'
 uci set wireless.default_radio0.ssid='LemonadeAP'
 uci set wireless.default_radio0.encryption='psk2'
 uci set wireless.default_radio0.key='12345678'
