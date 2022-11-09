@@ -11,24 +11,6 @@ DEVICE_VARS += KERNEL_INITRAMFS_PREFIX DAP_SIGNATURE
 DEVICE_VARS += EDIMAX_HEADER_MAGIC EDIMAX_HEADER_MODEL
 DEVICE_VARS += OPENMESH_CE_TYPE ZYXEL_MODEL_STRING
 
-define Build/add-elecom-factory-initramfs
-  $(eval edimax_model=$(word 1,$(1)))
-  $(eval product=$(word 2,$(1)))
-
-  $(STAGING_DIR_HOST)/bin/mkedimaximg \
-	-b -s CSYS -m $(edimax_model) \
-	-f 0x70000 -S 0x01100000 \
-	-i $@ -o $@.factory
-
-  $(call Build/elecom-product-header,$(product) $@.factory)
-
-  if [ "$$(stat -c%s $@.factory)" -le $$(($(subst k,* 1024,$(subst m, * 1024k,$(IMAGE_SIZE))))) ]; then \
-	mv $@.factory $(BIN_DIR)/$(KERNEL_INITRAMFS_PREFIX)-factory.bin; \
-  else \
-	echo "WARNING: initramfs kernel image too big, cannot generate factory image" >&2; \
-  fi
-endef
-
 define Build/addpattern
 	-$(STAGING_DIR_HOST)/bin/addpattern -B $(ADDPATTERN_ID) \
 		-v v$(ADDPATTERN_VERSION) -i $@ -o $@.new
@@ -1106,8 +1088,12 @@ define Device/elecom_wrc-1750ghbk2-i
   DEVICE_VENDOR := ELECOM
   DEVICE_MODEL := WRC-1750GHBK2-I/C
   IMAGE_SIZE := 15808k
-  KERNEL_INITRAMFS := $$(KERNEL) | pad-to 2 | \
-	add-elecom-factory-initramfs RN68 WRC-1750GHBK2
+ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
+  ARTIFACTS := initramfs-factory.bin
+  ARTIFACT/initramfs-factory.bin := append-image initramfs-kernel.bin | \
+	pad-to 2 | edimax-header -b -s CSYS -m RN68 -f 0x70000 -S 0x01100000 | \
+	elecom-product-header WRC-1750GHBK2 | check-size
+endif
   DEVICE_PACKAGES := kmod-ath10k-ct ath10k-firmware-qca988x-ct
 endef
 TARGET_DEVICES += elecom_wrc-1750ghbk2-i
@@ -1117,8 +1103,12 @@ define Device/elecom_wrc-300ghbk2-i
   DEVICE_VENDOR := ELECOM
   DEVICE_MODEL := WRC-300GHBK2-I
   IMAGE_SIZE := 7616k
-  KERNEL_INITRAMFS := $$(KERNEL) | pad-to 2 | \
-	add-elecom-factory-initramfs RN51 WRC-300GHBK2-I
+ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
+  ARTIFACTS := initramfs-factory.bin
+  ARTIFACT/initramfs-factory.bin := append-image initramfs-kernel.bin | \
+	pad-to 2 | edimax-header -b -s CSYS -m RN51 -f 0x70000 -S 0x01100000 | \
+	elecom-product-header WRC-300GHBK2-I | check-size
+endif
 endef
 TARGET_DEVICES += elecom_wrc-300ghbk2-i
 
@@ -2563,6 +2553,22 @@ define Device/teltonika_rut955-h7v3c0
   DEVICE_VARIANT := H7V3C0
 endef
 TARGET_DEVICES += teltonika_rut955-h7v3c0
+
+define Device/trendnet_tew-673gru
+  SOC := ar7161
+  DEVICE_VENDOR := Trendnet
+  DEVICE_MODEL := TEW-673GRU
+  DEVICE_VARIANT := v1.0R
+  DEVICE_PACKAGES := -uboot-envtools kmod-usb-ohci kmod-usb2 \
+	kmod-owl-loader kmod-switch-rtl8366s
+  IMAGE_SIZE := 7808k
+  FACTORY_SIZE := 6144k
+  IMAGES += factory.bin
+  IMAGE/factory.bin = append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | \
+	pad-rootfs | check-size $$$$(FACTORY_SIZE) | pad-to $$$$(FACTORY_SIZE) | \
+	append-string AP94-AR7161-RT-080619-01
+endef
+TARGET_DEVICES += trendnet_tew-673gru
 
 define Device/trendnet_tew-823dru
   SOC := qca9558

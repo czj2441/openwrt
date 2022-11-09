@@ -45,7 +45,7 @@ define Device/bananapi_bpi-r3
   DEVICE_DTS_CONFIG := config-mt7986a-bananapi-bpi-r3
   DEVICE_DTS_OVERLAY:= mt7986a-bananapi-bpi-r3-nor mt7986a-bananapi-bpi-r3-emmc-nor mt7986a-bananapi-bpi-r3-emmc-snand mt7986a-bananapi-bpi-r3-snand
   DEVICE_DTS_DIR := ../dts
-  DEVICE_PACKAGES := kmod-usb3 kmod-i2c-gpio kmod-sfp e2fsprogs f2fsck mkf2fs
+  DEVICE_PACKAGES := kmod-hwmon-pwmfan kmod-i2c-gpio kmod-sfp kmod-usb3 e2fsprogs f2fsck mkf2fs
   IMAGES := sysupgrade.itb
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
   ARTIFACTS := \
@@ -125,3 +125,17 @@ define Device/mediatek_mt7986b-rfb
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
 endef
 TARGET_DEVICES += mediatek_mt7986b-rfb
+
+define Device/xiaomi_redmi-router-ax6000
+  DEVICE_VENDOR := Xiaomi
+  DEVICE_MODEL := Redmi Router AX6000
+  DEVICE_DTS := mt7986a-xiaomi-redmi-router-ax6000
+  DEVICE_DTS_DIR := ../dts
+  KERNEL_LOADADDR := 0x48000000
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  KERNEL_IN_UBI := 1
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+endef
+TARGET_DEVICES += xiaomi_redmi-router-ax6000
