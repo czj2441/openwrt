@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# 使用于X86架构网关，双网口无无线
+# 使用于X86架构网关，双网口无无线.配置仅包含最基础运行条件，可以保证上网和后台访问即可.
 
 # 修改root密码
 sed -i '/root/d' /etc/shadow
@@ -96,6 +96,10 @@ uci set serverchan.serverchan.router_status='1'
 uci set serverchan.serverchan.router_temp='0'
 uci set serverchan.serverchan.router_wan='1'
 uci set serverchan.serverchan.client_list='1'
+uci set serverchan.serverchan.serverchan_sheep='2'
+uci set serverchan.serverchan.starttime='0'
+uci set serverchan.serverchan.endtime='7'
+uci set serverchan.serverchan.interval_time='4'
 uci commit serverchan
 
 # DDNS配置
