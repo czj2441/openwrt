@@ -7,7 +7,8 @@ include $(TOPDIR)/rules.mk
 ARCH:=mips
 BOARD:=ath25
 BOARDNAME:=Atheros AR231x/AR5312
-FEATURES:=squashfs low_mem small_flash
+FEATURES:=squashfs low_mem small_flash source-only
+SUBTARGETS:=generic
 
 KERNEL_PATCHVER:=5.10
 KERNEL_TESTING_PATCHVER:=5.10
