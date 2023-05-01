@@ -14,15 +14,14 @@ uci add_list system.ntp.server='ntp.aliyun.com'
 uci add_list system.ntp.server='time.ustc.edu.cn'
 uci commit system
 
-# 网络信息配置
-# 配置网桥
+# 配置网桥端口
 uci del network.@device[-1]
 uci add network device
 uci set network.@device[-1].name='br-lan'
 uci set network.@device[-1].type='bridge'
-uci set network.@device[-1].ports='eth1'
+uci add_list network.@device[-1].ports='eth1'
 uci commit network
-# 配置LAN
+# 配置局域网(LAN)接口
 uci del network.lan
 uci add network interface
 uci rename network.@interface[-1]='lan'
@@ -30,9 +29,11 @@ uci set network.lan.proto='static'
 uci set network.lan.ipaddr='192.168.8.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.ip6assign='64'
+uci set network.lan.ip6hint='0'
 uci set network.lan.device='br-lan'
+uci set network.lan.ip6class='wan6'
 uci commit network
-# 配置WAN
+# 配置上联(WAN)端口
 uci del network.wan
 uci add network interface
 uci rename network.@interface[-1]='wan'
@@ -42,18 +43,18 @@ uci set network.wan.password="24253132"
 uci set network.wan.ipv6='1'
 uci set network.wan.device='eth0'
 uci commit network
-# 配置wan6
+# 配置上联(WAN6)端口
 uci del network.wan6
 uci add network interface
 uci rename network.@interface[-1]='wan6'
 uci set network.wan6.proto='dhcpv6'
-uci set network.wan6.device='pppoe-wan'
+uci set network.wan6.reqprefix='auto'
+uci set network.wan6.device='@wan'
 uci set network.wan6.reqaddress='try'
-uci set network.wan6.reqprefix='60'
 uci commit network
 
 # 配置防火墙
-# 端口转发配置
+uci set firewall.@zone[0].network='lan'
 uci add firewall redirect
 uci set firewall.@redirect[-1].target='DNAT'
 uci set firewall.@redirect[-1].src='wan'
@@ -64,6 +65,40 @@ uci set firewall.@redirect[-1].dest_ip='192.168.8.1'
 uci set firewall.@redirect[-1].dest_port='80'
 uci set firewall.@redirect[-1].name='Router-Web'
 uci commit firewall
+
+# 配置DHCP
+uci add_list dhcp.@dnsmasq[0].address='/mqtt.ebeam.vip/192.168.8.10'
+uci add_list dhcp.@dnsmasq[0].address='/iotota.ebeam.vip/192.168.8.182'
+uci set dhcp.@dnsmasq[0].quietdhcp='1'
+uci commit dhcp
+# 配置上联(WAN)端口
+uci del dhcp.wan
+uci add dhcp dhcp
+uci set dhcp.@dhcp[-1].interface='wan'
+uci set dhcp.@dhcp[-1].ignore='1'
+uci rename dhcp.@dhcp[-1]='wan'
+uci commit dhcp
+# 配置上联(WAN6)端口
+uci del dhcp.wan6
+uci add dhcp dhcp
+uci set dhcp.@dhcp[-1].interface='wan6'
+uci set dhcp.@dhcp[-1].ignore='1'
+uci set dhcp.@dhcp[-1].master='1'
+uci rename dhcp.@dhcp[-1]='wan6'
+uci commit dhcp
+# 配置局域网(LAN)接口
+uci add dhcp dhcp
+uci set dhcp.@dhcp[-1].interface='lan'
+uci set dhcp.@dhcp[-1].start='100'
+uci set dhcp.@dhcp[-1].limit='150'
+uci set dhcp.@dhcp[-1].dhcpv4='server'
+uci set dhcp.@dhcp[-1].dhcpv6='server'
+uci set dhcp.@dhcp[-1].ndp='relay'
+uci set dhcp.@dhcp[-1].ra='server'
+uci set dhcp.@dhcp[-1].ra_flags='managed-config' 'other-config'
+uci set dhcp.@dhcp[-1].leasetime='30m'
+uci rename dhcp.@dhcp[-1]='lan'
+uci commit dhcp
 
 # Serverchan配置
 uci del serverchan.serverchan

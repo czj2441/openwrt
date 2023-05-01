@@ -35,6 +35,8 @@ endef
 define Package/$(PKG_NAME)/install     #把文件 99-xxx 写入 /etc/uci-defaults/ 目录下，如果是其他文件的话也可以用这种方法把特定文件写入固件中，比如证书
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/default-settings $(1)/etc/uci-defaults/99-$(PKG_NAME)
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_BIN) ./files/dawn_config $(1)/etc/config/dawn
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

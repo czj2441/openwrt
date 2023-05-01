@@ -56,6 +56,7 @@ platform_do_upgrade() {
 	asus,rt-ac65p|\
 	asus,rt-ac85p|\
 	asus,rt-ax53u|\
+	asus,rt-ax54|\
 	beeline,smartbox-flash|\
 	beeline,smartbox-giga|\
 	beeline,smartbox-turbo|\
@@ -152,6 +153,10 @@ platform_do_upgrade() {
 		dd bs=4 count=1 seek=26 conv=notrunc if=/dev/zero of=$kernel2_mtd 2>/dev/null &&\
 		echo "Kernel2 sequence number was reset to 0"
 		CI_KERNPART="Kernel"
+		nand_do_upgrade "$1"
+		;;
+	zyxel,wsm20)
+		zyxel_mstc_upgrade_prepare
 		nand_do_upgrade "$1"
 		;;
 	*)

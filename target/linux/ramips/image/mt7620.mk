@@ -54,7 +54,7 @@ define Device/alfa-network_tube-e4g
   DEVICE_VENDOR := ALFA Network
   DEVICE_MODEL := Tube-E4G
   DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci uboot-envtools uqmi -iwinfo \
-	-kmod-rt2800-soc -wpad-basic-wolfssl
+	-kmod-rt2800-soc -wpad-basic-mbedtls
   SUPPORTED_DEVICES += tube-e4g
 endef
 TARGET_DEVICES += alfa-network_tube-e4g
@@ -445,6 +445,21 @@ define Device/elecom_wrh-300cr
   SUPPORTED_DEVICES += wrh-300cr
 endef
 TARGET_DEVICES += elecom_wrh-300cr
+
+define Device/engenius_epg600
+  $(Device/uimage-lzma-loader)
+  SOC := mt7620a
+  BLOCKSIZE := 4k
+  IMAGE_SIZE := 15616k
+  IMAGES += factory.dlf
+  IMAGE/factory.dlf := $$(sysupgrade_bin) | check-size | \
+	senao-header -r 0x101 -p 0x6a -t 2
+  DEVICE_VENDOR := EnGenius
+  DEVICE_MODEL := EPG600
+  DEVICE_PACKAGES += kmod-rt2800-pci kmod-usb-storage \
+	kmod-usb-ohci kmod-usb2 uboot-envtools
+endef
+TARGET_DEVICES += engenius_epg600
 
 define Device/engenius_esr600
   SOC := mt7620a
@@ -1455,6 +1470,18 @@ define Device/zte_q7
   SUPPORTED_DEVICES += zte-q7
 endef
 TARGET_DEVICES += zte_q7
+
+define Device/zyxel_keenetic-lite-iii-a
+  SOC := mt7620n
+  IMAGE_SIZE := 7872k
+  DEVICE_VENDOR := ZyXEL
+  DEVICE_MODEL := Keenetic Lite III
+  DEVICE_VARIANT := A
+  IMAGES += factory.bin
+  IMAGE/factory.bin := $$(sysupgrade_bin) | pad-to 64k | check-size | \
+		zyimage -d 2102018 -v "ZyXEL Keenetic Lite III"
+endef
+TARGET_DEVICES += zyxel_keenetic-lite-iii-a
 
 define Device/zyxel_keenetic-omni
   SOC := mt7620n

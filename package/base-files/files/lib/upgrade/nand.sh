@@ -28,7 +28,7 @@ ubi_mknod() {
 
 nand_find_volume() {
 	local ubidevdir ubivoldir
-	ubidevdir="/sys/devices/virtual/ubi/$1"
+	ubidevdir="/sys/class/ubi/"
 	[ ! -d "$ubidevdir" ] && return 1
 	for ubivoldir in $ubidevdir/${1}_*; do
 		[ ! -d "$ubivoldir" ] && continue
@@ -41,13 +41,12 @@ nand_find_volume() {
 }
 
 nand_find_ubi() {
-	local ubidevdir ubidev mtdnum
+	local ubidevdir ubidev mtdnum cmtdnum
 	mtdnum="$( find_mtd_index $1 )"
 	[ ! "$mtdnum" ] && return 1
-	for ubidevdir in /sys/devices/virtual/ubi/ubi*; do
-		[ ! -d "$ubidevdir" ] && continue
+	for ubidevdir in /sys/class/ubi/ubi*; do
+		[ ! -e "$ubidevdir/mtd_num" ] && continue
 		cmtdnum="$( cat $ubidevdir/mtd_num )"
-		[ ! "$mtdnum" ] && continue
 		if [ "$mtdnum" = "$cmtdnum" ]; then
 			ubidev=$( basename $ubidevdir )
 			ubi_mknod "$ubidevdir"
@@ -262,10 +261,12 @@ nand_upgrade_ubinized() {
 	local ubi_file="$1"
 	local gz="$2"
 
+	local ubi_length=$( (${gz}cat "$ubi_file" | wc -c) 2> /dev/null)
+
 	nand_detach_ubi "$CI_UBIPART" || return 1
 
 	local mtdnum="$( find_mtd_index "$CI_UBIPART" )"
-	${gz}cat "$ubi_file" | ubiformat "/dev/mtd$mtdnum" -y -f - && ubiattach -m "$mtdnum"
+	${gz}cat "$ubi_file" | ubiformat "/dev/mtd$mtdnum" -S "$ubi_length" -y -f - && ubiattach -m "$mtdnum"
 }
 
 # Write the UBIFS image to UBI rootfs volume

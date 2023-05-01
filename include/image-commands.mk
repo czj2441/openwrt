@@ -106,7 +106,7 @@ endef
 define Build/append-squashfs-fakeroot-be
 	rm -rf $@.fakefs $@.fakesquashfs
 	mkdir $@.fakefs
-	$(STAGING_DIR_HOST)/bin/mksquashfs-lzma \
+	$(STAGING_DIR_HOST)/bin/mksquashfs3-lzma \
 		$@.fakefs $@.fakesquashfs \
 		-noappend -root-owned -be -nopad -b 65536 \
 		$(if $(SOURCE_DATE_EPOCH),-fixed-time $(SOURCE_DATE_EPOCH))
@@ -124,6 +124,13 @@ endef
 
 define Build/append-string
 	echo -n $(1) >> $@
+endef
+
+define Build/append-md5sum-ascii-salted
+	cp $@ $@.salted
+	echo -ne $(1) >> $@.salted
+	$(STAGING_DIR_HOST)/bin/mkhash md5 $@.salted | head -c32 >> $@
+	rm $@.salted
 endef
 
 define Build/append-ubi
