@@ -27,6 +27,12 @@ uci set firewall.@rule[-1].target='ACCEPT'
 uci set firewall.@rule[-1].dest_port='80'
 uci commit firewall
 
+# 配置DHCP
+uci set dhcp.@dnsmasq[-1].quietdhcp='1'
+uci set dhcp.@dnsmasq[-1].sequential_ip='1'
+uci set dhcp.@dnsmasq[-1].rebind_protection='0'
+uci commit dhcp
+
 # 配置无线
 uci set wireless.radio1.country='CN'
 uci set wireless.radio1.cell_density='1'
