@@ -33,6 +33,10 @@ uci set dhcp.@dnsmasq[-1].sequential_ip='1'
 uci set dhcp.@dnsmasq[-1].rebind_protection='0'
 uci commit dhcp
 
+# 配置有线
+uci delete network.wan6
+uci commit network
+
 # 配置无线
 uci set wireless.radio1.country='CN'
 uci set wireless.radio1.cell_density='1'
