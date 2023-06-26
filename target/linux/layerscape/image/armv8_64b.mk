@@ -98,6 +98,53 @@ define Device/fsl_ls1012a-frwy-sdboot
 endef
 TARGET_DEVICES += fsl_ls1012a-frwy-sdboot
 
+define Device/fsl_ls1028a-rdb
+  DEVICE_VENDOR := NXP
+  DEVICE_MODEL := LS1028A-RDB
+  DEVICE_VARIANT := Default
+  DEVICE_DTS := freescale/fsl-ls1028a-rdb
+  KERNEL = kernel-bin | gzip | fit gzip $$(DTS_DIR)/$$(DEVICE_DTS).dtb
+  DEVICE_PACKAGES += \
+    trusted-firmware-a-ls1028a-rdb \
+    kmod-hwmon-ina2xx \
+    kmod-hwmon-lm90 \
+    kmod-rtc-pcf2127
+  IMAGE/firmware.bin := \
+    ls-clean | \
+    ls-append $(1)-bl2.pbl | pad-to 1M | \
+    ls-append $(1)-fip.bin | pad-to 5M | \
+    ls-append $(1)-uboot-env.bin | pad-to 16M | \
+    append-kernel | \
+    append-rootfs | pad-rootfs | check-size
+  IMAGE/sysupgrade.bin := \
+    append-kernel | \
+    append-rootfs | pad-rootfs | \
+    check-size $(LS_SYSUPGRADE_IMAGE_SIZE) | append-metadata
+endef
+TARGET_DEVICES += fsl_ls1028a-rdb
+
+define Device/fsl_ls1028a-rdb-sdboot
+  $(Device/fsl-sdboot)
+  DEVICE_VENDOR := NXP
+  DEVICE_MODEL := LS1028A-RDB
+  DEVICE_VARIANT := SD Card Boot
+  DEVICE_DTS := freescale/fsl-ls1028a-rdb
+  DEVICE_PACKAGES += \
+    trusted-firmware-a-ls1028a-rdb-sdboot \
+    kmod-hwmon-ina2xx \
+    kmod-hwmon-lm90 \
+    kmod-rtc-pcf2127
+  IMAGE/sdcard.img.gz := \
+    ls-clean | \
+    ls-append-sdhead $(1) | pad-to 4K | \
+    ls-append $(1)-bl2.pbl | pad-to 1M | \
+    ls-append $(1)-fip.bin | pad-to 5M | \
+    ls-append $(1)-uboot-env.bin | pad-to 16M | \
+    ls-append-kernel | pad-to $(LS_SD_ROOTFSPART_OFFSET)M | \
+    append-rootfs | pad-to $(LS_SD_IMAGE_SIZE)M | gzip
+endef
+TARGET_DEVICES += fsl_ls1028a-rdb-sdboot
+
 define Device/fsl_ls1043a-rdb
   $(Device/fix-sysupgrade)
   DEVICE_VENDOR := NXP
@@ -404,3 +451,35 @@ define Device/traverse_ls1043
   SUPPORTED_DEVICES := traverse,ls1043s traverse,ls1043v
 endef
 TARGET_DEVICES += traverse_ls1043
+
+define Device/traverse_ten64_mtd
+  DEVICE_VENDOR := Traverse
+  DEVICE_MODEL := Ten64 (NAND boot)
+  DEVICE_NAME := ten64-mtd
+  DEVICE_PACKAGES += \
+    uboot-envtools \
+    kmod-rtc-rx8025 \
+    kmod-sfp \
+    kmod-i2c-mux-pca954x \
+    restool
+  DEVICE_DESCRIPTION = \
+    Generate images for booting from NAND/ubifs on Traverse Ten64 (LS1088A) \
+    family boards. For disk (NVMe/USB/SD) boot, use the armvirt target instead.
+  FILESYSTEMS := squashfs
+  KERNEL_LOADADDR := 0x80000000
+  KERNEL_ENTRY_POINT := 0x80000000
+  FDT_LOADADDR := 0x90000000
+  KERNEL_SUFFIX := -kernel.itb
+  DEVICE_DTS := freescale/fsl-ls1088a-ten64
+  IMAGES := nand.ubi sysupgrade.bin
+  KERNEL := kernel-bin | gzip | traverse-fit-ls1088 gzip $$(DTS_DIR)/$$(DEVICE_DTS).dtb $$(FDT_LOADADDR)
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  IMAGE/nand.ubi := append-ubi
+  KERNEL_IN_UBI := 1
+  BLOCKSIZE := 128KiB
+  PAGESIZE := 2048
+  MKUBIFS_OPTS := -m $$(PAGESIZE) -e 124KiB -c 600
+  SUPPORTED_DEVICES = traverse,ten64
+endef
+TARGET_DEVICES += traverse_ten64_mtd
+
