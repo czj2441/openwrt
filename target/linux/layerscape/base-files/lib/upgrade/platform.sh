@@ -49,6 +49,26 @@ platform_do_upgrade_traverse_nandubi() {
 	nand_do_upgrade "$1" || (echo "Upgrade failed, setting bootsys ${bootsys}" && fw_setenv bootsys $bootsys)
 
 }
+
+platform_do_upgrade_traverse_slotubi() {
+	part="$(awk -F 'ubi.mtd=' '{printf $2}' /proc/cmdline | sed -e 's/ .*$//')"
+	echo "Active boot slot: ${part}"
+	new_active_sys="b"
+
+	if [ ! -z "${part}" ]; then
+		if [ "${part}" = "ubia" ]; then
+			CI_UBIPART="ubib"
+		else
+			CI_UBIPART="ubia"
+			new_active_sys="a"
+		fi
+	fi
+	echo "Updating UBI part ${CI_UBIPART}"
+	fw_setenv "openwrt_active_sys" "${new_active_sys}"
+	nand_do_upgrade "$1"
+	return $?
+}
+
 platform_copy_config_sdboot() {
 	local diskdev partdev parttype=ext4
 
@@ -71,6 +91,7 @@ platform_copy_config() {
 	fsl,ls1012a-frwy-sdboot | \
 	fsl,ls1021a-iot-sdboot | \
 	fsl,ls1021a-twr-sdboot | \
+	fsl,ls1028a-rdb-sdboot | \
 	fsl,ls1043a-rdb-sdboot | \
 	fsl,ls1046a-frwy-sdboot | \
 	fsl,ls1046a-rdb-sdboot | \
@@ -89,12 +110,18 @@ platform_check_image() {
 		nand_do_platform_check "traverse-ls1043" $1
 		return $?
 		;;
+	traverse,ten64)
+		nand_do_platform_check "ten64-mtd" $1
+		return $?
+		;;
 	fsl,ls1012a-frdm | \
 	fsl,ls1012a-frwy-sdboot | \
 	fsl,ls1012a-rdb | \
 	fsl,ls1021a-iot-sdboot | \
 	fsl,ls1021a-twr | \
 	fsl,ls1021a-twr-sdboot | \
+	fsl,ls1028a-rdb | \
+	fsl,ls1028a-rdb-sdboot | \
 	fsl,ls1043a-rdb | \
 	fsl,ls1043a-rdb-sdboot | \
 	fsl,ls1046a-frwy | \
@@ -127,9 +154,13 @@ platform_do_upgrade() {
 	traverse,ls1043s)
 		platform_do_upgrade_traverse_nandubi "$1"
 		;;
+	traverse,ten64)
+		platform_do_upgrade_traverse_slotubi "${1}"
+		;;
 	fsl,ls1012a-frdm | \
 	fsl,ls1012a-rdb | \
 	fsl,ls1021a-twr | \
+	fsl,ls1028a-rdb | \
 	fsl,ls1043a-rdb | \
 	fsl,ls1046a-frwy | \
 	fsl,ls1046a-rdb | \
@@ -142,6 +173,7 @@ platform_do_upgrade() {
 	fsl,ls1012a-frwy-sdboot | \
 	fsl,ls1021a-iot-sdboot | \
 	fsl,ls1021a-twr-sdboot | \
+	fsl,ls1028a-rdb-sdboot | \
 	fsl,ls1043a-rdb-sdboot | \
 	fsl,ls1046a-frwy-sdboot | \
 	fsl,ls1046a-rdb-sdboot | \
