@@ -7,7 +7,7 @@ sed -i '/root/d' /etc/shadow
 sed -i '1i\root:$1$jy0vKzHj$x0SPe/UmNxsePtAyIs4gd0:19266:0:99999:7:::' /etc/shadow #12345678
 
 # 配置系统时区
-uci set system.@system[0].hostname='AP-WhereIsMe'
+uci set system.@system[0].hostname='AP-WhoIsMe'
 uci set system.@system[0].zonename='Asia/Shanghai'
 uci set system.@system[0].timezone='CST-8'
 uci set system.ntp.server=''
@@ -36,14 +36,14 @@ uci set network.@interface[-1].ip6assign='64'
 uci set network.@interface[-1].device='br-lan'
 uci rename network.@interface[-1]='lan'
 uci commit network
-# 配置上联(WAN)端口
+# 配置上联(WAN)接口
 uci del network.wan
 uci add network interface
 uci set network.@interface[-1].proto='dhcp'
 uci set network.@interface[-1].device='br-lan'
 uci rename network.@interface[-1]='wan'
 uci commit network
-# 配置上联(WAN6)端口
+# 配置上联(WAN6)接口
 uci del network.wan6
 uci add network interface
 uci set network.@interface[-1].proto='dhcpv6'
@@ -74,6 +74,7 @@ uci set firewall.@rule[-1].name='Allow-AP-SSH'
 uci set firewall.@rule[-1].src='wan'
 uci set firewall.@rule[-1].target='ACCEPT'
 uci set firewall.@rule[-1].dest_port='22'
+uci commit firewall
 
 # 配置无线
 uci set wireless.radio0.country='CN'
@@ -84,7 +85,7 @@ uci set wireless.radio0.disabled='0'
 uci set wireless.default_radio0.ssid='LemonadeAP'
 uci set wireless.default_radio0.encryption='psk2'
 uci set wireless.default_radio0.key='12345678'
-uci set wireless.default_radio0.network='UserWireless'
+uci set wireless.default_radio0.network='br-lan'
 uci set wireless.radio1.country='CN'
 uci set wireless.radio1.cell_density='0'
 uci set wireless.radio1.channel='149'
@@ -93,7 +94,7 @@ uci set wireless.radio1.disabled='0'
 uci set wireless.default_radio1.ssid='LemonadeAP-5G'
 uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.key='12345678'
-uci set wireless.default_radio0.network='UserWireless'
+uci set wireless.default_radio1.network='br-lan'
 uci commit wireless
 
 #详见： https://openwrt.org/docs/guide-developer/uci-defaults

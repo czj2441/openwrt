@@ -2827,7 +2827,6 @@ define Device/zyxel_wap6805
 endef
 TARGET_DEVICES += zyxel_wap6805
 
-<<<<<<< HEAD
 define Device/zte_e8820s
   $(Device/dsa-migration)
   $(Device/uimage-lzma-loader)
@@ -2846,7 +2845,7 @@ define Device/zte_e8820s
 	kmod-usb-ledtrig-usbport wpad hostapd-utils luci
 endef
 TARGET_DEVICES += zte_e8820s
-=======
+
 define Device/zyxel_wsm20
   $(Device/nand)
   KERNEL_SIZE := 8192k
@@ -2858,4 +2857,3 @@ define Device/zyxel_wsm20
   KERNEL_INITRAMFS := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb | znet-header V1.00(ABZF.0)C0
 endef
 TARGET_DEVICES += zyxel_wsm20
->>>>>>> cf8d861978dbfdb572a25db460db464b50d9e809
