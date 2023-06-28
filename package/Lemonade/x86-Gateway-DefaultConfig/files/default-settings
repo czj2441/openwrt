@@ -125,7 +125,7 @@ uci set serverchan.serverchan.ssh_logged='0'
 uci set serverchan.serverchan.web_login_failed='0'
 uci set serverchan.serverchan.ssh_login_failed='0'
 uci set serverchan.serverchan.crontab='2'
-uci set serverchan.serverchan.interval_time='1'
+uci set serverchan.serverchan.interval_time='4'
 uci set serverchan.serverchan.send_title='Gateway Status'
 uci set serverchan.serverchan.router_status='1'
 uci set serverchan.serverchan.router_temp='0'
@@ -140,28 +140,26 @@ uci commit serverchan
 # DDNS配置
 uci del ddns.myddns_ipv4
 uci del ddns.myddns_ipv6
+uci del ddns.ebeam_vip
 uci add ddns service
 uci rename ddns.@service[-1]='ebeam_vip'
 uci set ddns.@service[-1].service_name='dnspod.cn'
 uci set ddns.@service[-1].lookup_host='srv.ebeam.vip'
+uci set ddns.@service[-1].enabled='1'
+uci set ddns.@service[-1].use_ipv6='0'
 uci set ddns.@service[-1].domain='srv.ebeam.vip'
 uci set ddns.@service[-1].username='224824'
 uci set ddns.@service[-1].password='702bae3c6a80988814d04f90b6d5dc61'
-uci set ddns.@service[-1].enabled='1'
-uci set ddns.@service[-1].force_ipversion='1'
-uci set ddns.@service[-1].use_syslog='3'
-uci add ddns service
-uci rename ddns.@service[-1]='agserver_cn'
-uci set ddns.@service[-1].service_name='dnspod.cn'
-uci set ddns.@service[-1].lookup_host='czj.agserver.cn'
-uci set ddns.@service[-1].domain='czj.agserver.cn'
-uci set ddns.@service[-1].username='207633'
-uci set ddns.@service[-1].password='c0e1f7b58653eae37d08c72fc80eb0bd'
-uci set ddns.@service[-1].enabled='1'
-uci set ddns.@service[-1].force_ipversion='1'
-uci set ddns.@service[-1].use_syslog='3'
 uci set ddns.@service[-1].ip_source='interface'
 uci set ddns.@service[-1].ip_interface='pppoe-wan'
+uci set ddns.@service[-1].interface='pppoe-wan'
+uci set ddns.@service[-1].check_interval='5'
+uci set ddns.@service[-1].check_unit='minutes'
+uci set ddns.@service[-1].force_interval='3'
+uci set ddns.@service[-1].force_unit='days'
+uci set ddns.@service[-1].retry_interval='30'
+uci set ddns.@service[-1].retry_unit='seconds'
+uci set ddns.@service[-1].use_syslog='2'
 uci commit ddns
 
 #详见： https://openwrt.org/docs/guide-developer/uci-defaults
