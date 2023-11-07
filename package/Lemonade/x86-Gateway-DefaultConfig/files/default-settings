@@ -152,9 +152,9 @@ uci set ddns.@service[-1].use_ipv6='0'
 uci set ddns.@service[-1].domain='srv.ebeam.vip'
 uci set ddns.@service[-1].username='224824'
 uci set ddns.@service[-1].password='702bae3c6a80988814d04f90b6d5dc61'
-uci set ddns.@service[-1].ip_source='interface'
-uci set ddns.@service[-1].ip_interface='pppoe-wan'
-uci set ddns.@service[-1].interface='pppoe-wan'
+uci set ddns.@service[-1].ip_source='network'
+uci set ddns.@service[-1].interface='wan'
+uci set ddns.@service[-1].ip_network='wan'
 uci set ddns.@service[-1].check_interval='5'
 uci set ddns.@service[-1].check_unit='minutes'
 uci set ddns.@service[-1].force_interval='3'
@@ -163,6 +163,8 @@ uci set ddns.@service[-1].retry_interval='30'
 uci set ddns.@service[-1].retry_unit='seconds'
 uci set ddns.@service[-1].use_syslog='2'
 uci commit ddns
+/etc/init.d/ddns enable
+/etc/init.d/ddns restart
 
 #详见： https://openwrt.org/docs/guide-developer/uci-defaults
 exit 0
