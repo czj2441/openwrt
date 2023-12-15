@@ -1,0 +1,96 @@
+#!/bin/sh
+
+# 使用于RAMIPS架构Lte路由器
+
+# 修改root密码
+sed -i '/root/d' /etc/shadow
+sed -i '1i\root:$1$bgaAdcW/$6X5BnzBb4aEUW4tshoTRJ.:19672:0:99999:7:::' /etc/shadow #7*****c**
+
+# 配置系统时区
+uci set system.@system[0].hostname='E8820S'
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci set system.@system[0].timezone='CST-8'
+uci set system.ntp.server=''
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='time.ustc.edu.cn'
+uci commit system
+
+# 配置局域网(LAN)接口
+uci del network.lan
+uci add network interface
+uci set network.@interface[-1].proto='static'
+uci set network.@interface[-1].ipaddr='192.168.39.1'
+uci set network.@interface[-1].netmask='255.255.255.0'
+uci set network.@interface[-1].ip6assign='64'
+uci set network.@interface[-1].device='br-lan'
+uci rename network.@interface[-1]='lan'
+uci commit network
+
+# 配置上联(WAN)接口
+uci del network.wan
+uci add network interface
+uci set network.@interface[-1].proto='dhcp'
+uci set network.@interface[-1].device='wan'
+uci rename network.@interface[-1]='wan'
+uci commit network
+
+# 配置上联(WAN6)接口
+uci del network.wan6
+uci add network interface
+uci set network.@interface[-1].proto='dhcpv6'
+uci set network.@interface[-1].device='wan'
+uci set network.@interface[-1].reqaddress='try'
+uci set network.@interface[-1].reqprefix='auto'
+uci rename network.@interface[-1]='wan6'
+uci commit network
+
+# 配置上联(WAN)接口
+uci add network interface
+uci set network.@interface[-1].proto='dhcp'
+uci set network.@interface[-1].device='usb0'
+uci rename network.@interface[-1]='rndis'
+uci commit network
+
+# 配置上联(WAN6)接口
+uci add network interface
+uci set network.@interface[-1].proto='dhcpv6'
+uci set network.@interface[-1].device='usb0'
+uci set network.@interface[-1].reqaddress='try'
+uci set network.@interface[-1].reqprefix='auto'
+uci rename network.@interface[-1]='rndis6'
+uci commit network
+
+# 配置防火墙
+uci set firewall.@zone[1].network=''
+uci add_list firewall.@zone[1].network='rndis'
+uci add_list firewall.@zone[1].network='rndis6'
+uci commit firewall
+
+# 配置DHCP
+uci del dhcp.wan
+uci del dhcp.wan6
+uci commit dhcp
+
+# 配置无线
+uci set wireless.radio0.country='CN'
+uci set wireless.radio0.cell_density='1'
+uci set wireless.radio0.channel='auto'
+uci set wireless.radio0.htmode='HT40'
+uci set wireless.radio0.disabled='0'
+uci set wireless.default_radio0.ssid='E8820S'
+uci set wireless.default_radio0.encryption='psk2'
+uci set wireless.default_radio0.key='epwqcanm@201'
+uci set wireless.default_radio0.network='lan'
+uci set wireless.radio1.country='CN'
+uci set wireless.radio1.cell_density='0'
+uci set wireless.radio1.channel='157'
+uci set wireless.radio1.htmode='VHT80'
+uci set wireless.radio1.disabled='0'
+uci set wireless.default_radio1.ssid='E8820S-5G'
+uci set wireless.default_radio1.encryption='psk2'
+uci set wireless.default_radio1.key='epwqcanm@201'
+uci set wireless.default_radio1.network='lan'
+uci commit wireless
+
+#详见： https://openwrt.org/docs/guide-developer/uci-defaults
+exit 0
