@@ -10,6 +10,7 @@ mediatek_setup_interfaces()
 	case $board in
 	bananapi,bpi-r64|\
 	buffalo,wsr-3200ax4s|\
+	dlink,eagle-pro-ai-r32-a1|\
 	elecom,wrc-x3200gst3|\
 	linksys,e8450|\
 	linksys,e8450-ubi|\
@@ -23,6 +24,9 @@ mediatek_setup_interfaces()
 	buffalo,wsr-2533dhp2)
 		ucidef_add_switch "switch0" \
 			"0:lan" "1:lan" "2:lan" "3:lan" "4:wan" "6@eth0"
+		;;
+	dlink,eagle-pro-ai-m32-a1)
+		ucidef_set_interfaces_lan_wan "lan1 lan2" wan
 		;;
 	ubnt,unifi-6-lr*)
 		ucidef_set_interface_lan "eth0"

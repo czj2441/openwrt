@@ -145,7 +145,7 @@ mac80211_hostapd_setup_base() {
 	[ "$auto_channel" = 0 ] && [ -z "$channel_list" ] && \
 		channel_list="$channel"
 
-	[ "$min_tx_power" -gt 0 ] && append base_cfg "min_tx_power=$min_tx_power"
+	[ "$min_tx_power" -gt 0 ] && append base_cfg "min_tx_power=$min_tx_power" "$N"
 
 	set_default noscan 0
 
@@ -940,7 +940,7 @@ mac80211_setup_supplicant() {
 	if [ "$mode" = "sta" ]; then
 		wpa_supplicant_add_network "$ifname"
 	else
-		wpa_supplicant_add_network "$ifname" "$freq" "$htmode" "$noscan"
+		wpa_supplicant_add_network "$ifname" "$freq" "$htmode" "$hostapd_noscan"
 	fi
 
 	wpa_supplicant_add_interface "$ifname" "$mode"
