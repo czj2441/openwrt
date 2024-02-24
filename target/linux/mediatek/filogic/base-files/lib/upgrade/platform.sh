@@ -1,4 +1,5 @@
 REQUIRE_IMAGE_METADATA=1
+RAMFS_COPY_BIN='fitblk'
 
 asus_initial_setup()
 {
@@ -49,6 +50,7 @@ xiaomi_initial_setup()
 
 	local board=$(board_name)
 	case "$board" in
+	xiaomi,mi-router-ax3000t|\
 	xiaomi,mi-router-wr30u-stock)
 		fw_setenv mtdparts "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),34816k(ubi),34816k(ubi1),32768k(overlay),12288k(data),256k(KF)"
 		;;
@@ -56,6 +58,21 @@ xiaomi_initial_setup()
 		fw_setenv mtdparts "nmbm0:1024k(bl2),256k(Nvram),256k(Bdata),2048k(factory),2048k(fip),256k(crash),256k(crash_log),30720k(ubi),30720k(ubi1),51200k(overlay)"
 		;;
 	esac
+}
+
+platform_get_bootdev() {
+	local rootdisk="$(cat /sys/firmware/devicetree/base/chosen/rootdisk)"
+	local handle bootdev
+	for handle in /sys/class/block/*/of_node/phandle /sys/class/block/*/device/of_node/phandle; do
+		[ ! -e "$handle" ] && continue
+		if [ "$rootdisk" = "$(cat $handle)" ]; then
+			bootdev="${handle%/of_node/phandle}"
+			bootdev="${bootdev%/device}"
+			bootdev="${bootdev#/sys/class/block/}"
+			echo "$bootdev"
+			break
+		fi
+	done
 }
 
 platform_do_upgrade() {
@@ -78,18 +95,19 @@ platform_do_upgrade() {
 		CI_KERNPART="linux"
 		nand_do_upgrade "$1"
 		;;
-	bananapi,bpi-r3)
-		local rootdev="$(cmdline_get_var root)"
-		rootdev="${rootdev##*/}"
-		rootdev="${rootdev%p[0-9]*}"
-		case "$rootdev" in
-		mmc*)
-			CI_ROOTDEV="$rootdev"
-			CI_KERNPART="production"
+	bananapi,bpi-r3|\
+	bananapi,bpi-r3-mini|\
+	bananapi,bpi-r4)
+		[ -e /dev/fit0 ] && fitblk /dev/fit0
+		[ -e /dev/fitrw ] && fitblk /dev/fitrw
+		bootdev="$(platform_get_bootdev)"
+		case "$bootdev" in
+		mmcblk*)
+			EMMC_KERN_DEV="/dev/$bootdev"
 			emmc_do_upgrade "$1"
 			;;
 		mtdblock*)
-			PART_NAME="fit"
+			PART_NAME="/dev/mtd${bootdev:8}"
 			default_do_upgrade "$1"
 			;;
 		ubiblock*)
@@ -110,7 +128,8 @@ platform_do_upgrade() {
 			;;
 		esac
 		;;
-	cudy,wr3000-v1)
+	cudy,wr3000-v1|\
+	yuncore,ax835)
 		default_do_upgrade "$1"
 		;;
 	glinet,gl-mt2500|\
@@ -126,10 +145,15 @@ platform_do_upgrade() {
 	tplink,tl-xdr4288|\
 	tplink,tl-xdr6086|\
 	tplink,tl-xdr6088|\
+	xiaomi,mi-router-ax3000t-ubootmod|\
 	xiaomi,mi-router-wr30u-ubootmod|\
 	xiaomi,redmi-router-ax6000-ubootmod)
 		CI_KERNPART="fit"
 		nand_do_upgrade "$1"
+		;;
+	jdcloud,re-cp-03)
+		CI_KERNPART="production"
+		emmc_do_upgrade "$1"
 		;;
 	mercusys,mr90x-v1)
 		CI_UBIPART="ubi0"
@@ -140,6 +164,7 @@ platform_do_upgrade() {
 		EMMC_ROOT_DEV="$(cmdline_get_var root)"
 		emmc_do_upgrade "$1"
 		;;
+	xiaomi,mi-router-ax3000t|\
 	xiaomi,mi-router-wr30u-stock|\
 	xiaomi,redmi-router-ax6000-stock)
 		CI_KERN_UBIPART=ubi_kernel
@@ -167,6 +192,7 @@ platform_check_image() {
 
 	case "$board" in
 	bananapi,bpi-r3|\
+	bananapi,bpi-r4|\
 	cmcc,rax3000m)
 		[ "$magic" != "d00dfeed" ] && {
 			echo "Invalid image type."
@@ -185,7 +211,6 @@ platform_check_image() {
 
 platform_copy_config() {
 	case "$(board_name)" in
-	bananapi,bpi-r3|\
 	cmcc,rax3000m)
 		case "$(cmdline_get_var root)" in
 		/dev/mmc*)
@@ -193,9 +218,19 @@ platform_copy_config() {
 			;;
 		esac
 		;;
+	bananapi,bpi-r3|\
+	bananapi,bpi-r3-mini|\
+	bananapi,bpi-r4)
+		case "$(platform_get_bootdev)" in
+		mmcblk*)
+			emmc_copy_config
+			;;
+		esac
+		;;
 	acer,predator-w6|\
 	glinet,gl-mt2500|\
 	glinet,gl-mt6000|\
+	jdcloud,re-cp-03|\
 	ubnt,unifi-6-plus)
 		emmc_copy_config
 		;;
@@ -211,6 +246,7 @@ platform_pre_upgrade() {
 	asus,tuf-ax6000)
 		asus_initial_setup
 		;;
+	xiaomi,mi-router-ax3000t|\
 	xiaomi,mi-router-wr30u-stock|\
 	xiaomi,redmi-router-ax6000-stock)
 		xiaomi_initial_setup
