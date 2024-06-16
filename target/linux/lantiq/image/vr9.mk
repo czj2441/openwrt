@@ -107,6 +107,21 @@ define Device/arcadyan_vgv7519-nor
 endef
 TARGET_DEVICES += arcadyan_vgv7519-nor
 
+define Device/arcadyan_vrv9510kwac23
+  $(Device/dsa-migration)
+  $(Device/NAND)
+  DEVICE_VENDOR := Arcadyan
+  DEVICE_MODEL := VRV9510KWAC23
+  DEVICE_ALT0_VENDOR := Livebox
+  DEVICE_ALT0_MODEL := Next
+  BOARD_NAME := VRV9510KWAC23
+  DEVICE_PACKAGES :=  kmod-b43 wpad-basic-mbedtls broadcom-43222-sprom \
+    broadcom-4360-sprom kmod-usb-dwc2 kmod-ltq-tapi kmod-ltq-vmmc
+  KERNEL_SIZE := 4096k
+  SUPPORTED_DEVICES += arcadyan_vrv9510kwac23
+endef
+TARGET_DEVICES += arcadyan_vrv9510kwac23
+
 define Device/avm_fritz3370
   $(Device/dsa-migration)
   $(Device/AVM)
@@ -362,6 +377,7 @@ define Device/zyxel_p-2812hnu-f1
   DEVICE_PACKAGES := kmod-rt2800-pci wpad-basic-mbedtls kmod-usb-dwc2 kmod-usb-ledtrig-usbport
   KERNEL_SIZE := 3072k
   SUPPORTED_DEVICES += P2812HNUF1
+  DEFAULT := n
 endef
 TARGET_DEVICES += zyxel_p-2812hnu-f1
 

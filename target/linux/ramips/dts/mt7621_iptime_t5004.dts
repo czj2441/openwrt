@@ -53,9 +53,8 @@
 		};
 
 		partition@80000 {
-			label = "config";
+			label = "u-boot-env";
 			reg = <0x80000 0xc0000>;
-			read-only;
 		};
 
 		partition@140000 {
@@ -92,10 +91,8 @@
 	phy-handle = <&ethphy0>;
 };
 
-&mdio {
-	ethphy0: ethernet-phy@0 {
-		reg = <0>;
-	};
+&ethphy0 {
+	/delete-property/ interrupts;
 };
 
 &switch0 {

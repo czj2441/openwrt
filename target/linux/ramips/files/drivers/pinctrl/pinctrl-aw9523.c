@@ -16,7 +16,6 @@
 #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
-#include <linux/version.h>
 #include <linux/gpio/consumer.h>
 #include <linux/gpio/driver.h>
 #include <linux/pinctrl/pinconf.h>
@@ -810,7 +809,7 @@ static int aw9523_init_gpiochip(struct aw9523 *awi, unsigned int npins)
 	gpiochip->set_multiple = aw9523_gpio_set_multiple;
 	gpiochip->set_config = gpiochip_generic_config;
 	gpiochip->parent = dev;
-	gpiochip->of_node = dev->of_node;
+	gpiochip->fwnode = dev->fwnode;
 	gpiochip->owner = THIS_MODULE;
 	gpiochip->can_sleep = true;
 
@@ -984,8 +983,7 @@ static int aw9523_hw_init(struct aw9523 *awi)
 	return regmap_reinit_cache(awi->regmap, &aw9523_regmap);
 }
 
-static int aw9523_probe(struct i2c_client *client,
-			const struct i2c_device_id *id)
+static int aw9523_probe(struct i2c_client *client)
 {
 	struct device *dev = &client->dev;
 	struct pinctrl_desc *pdesc;
@@ -1097,12 +1095,10 @@ static int aw9523_remove(struct i2c_client *client)
 	return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 static void aw9523_remove_void(struct i2c_client *client)
 {
 	aw9523_remove(client);
 }
-#endif
 
 static const struct i2c_device_id aw9523_i2c_id_table[] = {
 	{ "aw9523_i2c", 0 },
@@ -1121,11 +1117,7 @@ static struct i2c_driver aw9523_driver = {
 		.of_match_table = of_aw9523_i2c_match,
 	},
 	.probe = aw9523_probe,
-	#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 	.remove = aw9523_remove_void,
-	#else
-	.remove = aw9523_remove,
-	#endif
 	.id_table = aw9523_i2c_id_table,
 };
 module_i2c_driver(aw9523_driver);

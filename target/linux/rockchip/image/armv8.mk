@@ -61,7 +61,7 @@ define Device/friendlyarm_nanopi-r4s-enterprise
   DEVICE_VARIANT := 4GB LPDDR4
   SOC := rk3399
   UBOOT_DEVICE_NAME := nanopi-r4s-rk3399
-  DEVICE_PACKAGES := kmod-r8168
+  DEVICE_PACKAGES := kmod-r8169
 endef
 TARGET_DEVICES += friendlyarm_nanopi-r4s-enterprise
 
@@ -104,6 +104,16 @@ define Device/radxa_cm3-io
 endef
 TARGET_DEVICES += radxa_cm3-io
 
+define Device/radxa_e25
+  DEVICE_VENDOR := Radxa
+  DEVICE_MODEL := E25
+  SOC := rk3568
+  DEVICE_DTS := rockchip/rk3568-radxa-e25
+  UBOOT_DEVICE_NAME := radxa-e25-rk3568
+  DEVICE_PACKAGES := kmod-r8169 kmod-ata-ahci-platform
+endef
+TARGET_DEVICES += radxa_e25
+
 define Device/radxa_rock-pi-4a
   DEVICE_VENDOR := Radxa
   DEVICE_MODEL := ROCK Pi 4A
@@ -119,6 +129,15 @@ define Device/radxa_rock-pi-e
   SOC := rk3328
 endef
 TARGET_DEVICES += radxa_rock-pi-e
+
+define Device/sinovoip_bpi-r2-pro
+  DEVICE_VENDOR := Sinovoip
+  DEVICE_MODEL := Bananapi-R2 Pro
+  SOC := rk3568
+  SUPPORTED_DEVICES := sinovoip,rk3568-bpi-r2pro
+  DEVICE_PACKAGES := kmod-ata-ahci-dwc
+endef
+TARGET_DEVICES += sinovoip_bpi-r2-pro
 
 define Device/xunlong_orangepi-r1-plus
   DEVICE_VENDOR := Xunlong

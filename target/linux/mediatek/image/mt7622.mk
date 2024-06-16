@@ -8,27 +8,6 @@ define Image/Prepare
 	echo -ne '\xde\xad\xc0\xde' > $(KDIR)/ubi_mark
 endef
 
-define Build/buffalo-trx
-	$(eval magic=$(word 1,$(1)))
-	$(eval kern_bin=$(if $(1),$(IMAGE_KERNEL),$@))
-	$(eval rtfs_bin=$(word 2,$(1)))
-	$(eval apnd_bin=$(word 3,$(1)))
-	$(eval kern_size=$(if $(KERNEL_SIZE),$(KERNEL_SIZE),0x400000))
-
-	$(if $(rtfs_bin),touch $(rtfs_bin))
-	$(STAGING_DIR_HOST)/bin/otrx create $@.new \
-		$(if $(magic),-M $(magic),) \
-		-f $(kern_bin) \
-		$(if $(rtfs_bin),\
-			-a 0x20000 \
-			-b $$(( $(call exp_units,$(kern_size)) )) \
-			-f $(rtfs_bin),) \
-		$(if $(apnd_bin),\
-			-A $(apnd_bin) \
-			-a 0x20000)
-	mv $@.new $@
-endef
-
 define Build/bl2
 	cat $(STAGING_DIR_IMAGE)/mt7622-$1-bl2.img >> $@
 endef
@@ -37,31 +16,19 @@ define Build/bl31-uboot
 	cat $(STAGING_DIR_IMAGE)/mt7622_$1-u-boot.fip >> $@
 endef
 
-# Append header to a D-Link M32/R32 Kernel 1 partition
-define Build/m32-r32-recovery-header-kernel1
-	$(eval header_start=$(word 1,$(1)))
-# create $@.header without the checksum
-	echo -en "$(header_start)\x00\x00" > "$@.header"
-# Calculate checksum over data area ($@) and append it to the header.
-# The checksum is the 2byte-sum over the whole data area.
-# Every overflow during the checksum calculation must increment the current checksum value by 1.
-	od -v -w2 -tu2 -An --endian little "$@" | awk '{ s+=$$1; } END { s%=65535; printf "%c%c",s%256,s/256; }' >> "$@.header"
-	echo -en "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x8D\x57\x30\x0B" >> "$@.header"
-# Byte 0-3: Erase Start 0x002C0000
-# Byte 4-7: Erase Length 0x02D00000
-# Byte 8-11: Data offset: 0x002C0000
-# Byte 12-15: Data Length: 0x02D00000
-	echo -en "\x00\x00\x2C\x00\x00\x00\xD0\x02\x00\x00\x2C\x00\x00\x00\xD0\x02" >> "$@.header"
-# Only zeros
-	echo -en "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" >> "$@.header"
-# Last 16 bytes, but without checksum
-	echo -en "\x42\x48\x02\x00\x00\x00\x08\x00\x00\x00\x00\x00\x60\x6E" >> "$@.header"
-# Calculate and append checksum: The checksum must be set so that the 2byte-sum of the whole header is 0.
-# Every overflow during the checksum calculation must increment the current checksum value by 1.
-	od -v -w2 -tu2 -An --endian little "$@.header" | awk '{s+=65535-$$1;}END{s%=65535;printf "%c%c",s%256,s/256;}' >> "$@.header"
-	cat "$@.header" "$@" > "$@.new"
-	mv "$@.new" "$@"
-	rm "$@.header"
+define Build/uboot-bin
+	cat $(STAGING_DIR_IMAGE)/mt7622_$1-u-boot.bin >> $@
+endef
+
+define Build/uboot-fit
+	$(TOPDIR)/scripts/mkits.sh \
+		-D $(DEVICE_NAME) -o $@.its -k $@ \
+		-C $(word 1,$(1)) \
+		-a 0x41e00000 -e 0x41e00000 \
+		-c "config-1" \
+		-A $(LINUX_KARCH) -v u-boot
+	PATH=$(LINUX_DIR)/scripts/dtc:$(PATH) mkimage -f $@.its $@.new
+	@mv $@.new $@
 endef
 
 define Build/mt7622-gpt
@@ -90,7 +57,7 @@ define Device/bananapi_bpi-r64
   DEVICE_MODEL := BPi-R64
   DEVICE_DTS := mt7622-bananapi-bpi-r64
   DEVICE_DTS_OVERLAY := mt7622-bananapi-bpi-r64-pcie1 mt7622-bananapi-bpi-r64-sata
-  DEVICE_PACKAGES := fitblk kmod-ata-ahci-mtk kmod-btmtkuart kmod-usb3 e2fsprogs mkf2fs f2fsck
+  DEVICE_PACKAGES := kmod-ata-ahci-mtk kmod-btmtkuart kmod-usb3 e2fsprogs mkf2fs f2fsck
   DEVICE_DTC_FLAGS := --pad 4096
   DEVICE_DTS_LOADADDR := 0x43f00000
   ARTIFACTS := emmc-preloader.bin emmc-bl31-uboot.fip sdcard.img.gz snand-preloader.bin snand-bl31-uboot.fip
@@ -195,7 +162,7 @@ define Device/dlink_eagle-pro-ai-m32-a1
   $(Device/dlink_eagle-pro-ai-ax3200-a1)
   DEVICE_MODEL := EAGLE PRO AI M32
   DEVICE_DTS := mt7622-dlink-eagle-pro-ai-m32-a1
-  IMAGE/recovery.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | pad-to $$(IMAGE_SIZE) | m32-r32-recovery-header-kernel1 DLK6E6010001
+  IMAGE/recovery.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | pad-to $$(IMAGE_SIZE) | dlink-ai-recovery-header DLK6E6010001 \x8D\x57\x30\x0B \x00\x00\x2C\x00 \x00\x00\xD0\x02 \x60\x6E
 endef
 TARGET_DEVICES += dlink_eagle-pro-ai-m32-a1
 
@@ -203,7 +170,7 @@ define Device/dlink_eagle-pro-ai-r32-a1
   $(Device/dlink_eagle-pro-ai-ax3200-a1)
   DEVICE_MODEL := EAGLE PRO AI R32
   DEVICE_DTS := mt7622-dlink-eagle-pro-ai-r32-a1
-  IMAGE/recovery.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | pad-to $$(IMAGE_SIZE) | m32-r32-recovery-header-kernel1 DLK6E6015001
+  IMAGE/recovery.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | pad-to $$(IMAGE_SIZE) | dlink-ai-recovery-header DLK6E6015001 \x8D\x57\x30\x0B \x00\x00\x2C\x00 \x00\x00\xD0\x02 \x60\x6E
 endef
 TARGET_DEVICES += dlink_eagle-pro-ai-r32-a1
 
@@ -256,7 +223,7 @@ define Device/linksys_e8450-ubi
   DEVICE_ALT0_VARIANT := UBI
   DEVICE_DTS := mt7622-linksys-e8450-ubi
   DEVICE_DTS_DIR := ../dts
-  DEVICE_PACKAGES := fitblk kmod-mt7915-firmware kmod-usb3
+  DEVICE_PACKAGES := kmod-mt7915-firmware kmod-usb3
   UBINIZE_OPTS := -E 5
   BLOCKSIZE := 128k
   PAGESIZE := 2048
@@ -273,7 +240,7 @@ define Device/linksys_e8450-ubi
   ARTIFACT/preloader.bin := bl2 snand-ubi-1ddr
   ARTIFACT/bl31-uboot.fip := bl31-uboot linksys_e8450
   DEVICE_COMPAT_VERSION := 2.0
-  DEVICE_COMPAT_MESSAGE := SPI-NAND flash layout changes require bootloader update
+  DEVICE_COMPAT_MESSAGE := SPI-NAND flash layout changes require bootloader update. Please run the UBI installer version 1.1.0+ (unsigned) first.
 endef
 TARGET_DEVICES += linksys_e8450-ubi
 
@@ -295,14 +262,14 @@ define Device/mediatek_mt7622-rfb1-ubi
   UBINIZE_OPTS := -E 5
   BLOCKSIZE := 128k
   PAGESIZE := 2048
-  KERNEL_SIZE := 4194304
+  KERNEL_SIZE := 6291456
   IMAGE_SIZE := 32768k
   IMAGES += factory.bin
   IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | \
                 check-size $$$$(IMAGE_SIZE)
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
 endef
-# TARGET_DEVICES += mediatek_mt7622-rfb1-ubi
+TARGET_DEVICES += mediatek_mt7622-rfb1-ubi
 
 define Device/netgear_wax206
   $(Device/dsa-migration)
@@ -377,7 +344,7 @@ define Device/ubnt_unifi-6-lr-v1-ubootmod
   DEVICE_VARIANT := v1 U-Boot mod
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v1-ubootmod
   DEVICE_DTS_DIR := ../dts
-  DEVICE_PACKAGES := fitblk kmod-mt7915-firmware kmod-leds-ubnt-ledbar
+  DEVICE_PACKAGES := kmod-mt7915-firmware kmod-leds-ubnt-ledbar
   KERNEL := kernel-bin | lzma
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
   KERNEL_INITRAMFS := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
@@ -407,7 +374,7 @@ define Device/ubnt_unifi-6-lr-v2-ubootmod
   DEVICE_VARIANT := v2 U-Boot mod
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v2-ubootmod
   DEVICE_DTS_DIR := ../dts
-  DEVICE_PACKAGES := fitblk kmod-mt7915-firmware
+  DEVICE_PACKAGES := kmod-mt7915-firmware
   KERNEL := kernel-bin | lzma
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
   KERNEL_INITRAMFS := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
@@ -436,7 +403,7 @@ define Device/ubnt_unifi-6-lr-v3-ubootmod
   DEVICE_VARIANT := v3 U-Boot mod
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v3-ubootmod
   DEVICE_DTS_DIR := ../dts
-  DEVICE_PACKAGES := fitblk kmod-mt7915-firmware
+  DEVICE_PACKAGES := kmod-mt7915-firmware
   KERNEL := kernel-bin | lzma
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
   KERNEL_INITRAMFS := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
@@ -458,12 +425,20 @@ define Device/xiaomi_redmi-router-ax6s
   BOARD_NAME := xiaomi,redmi-router-ax6s
   DEVICE_PACKAGES := kmod-mt7915-firmware
   UBINIZE_OPTS := -E 5
-  IMAGES += factory.bin
   BLOCKSIZE := 128k
   PAGESIZE := 2048
-  KERNEL_SIZE := 4096k
+  KERNEL := kernel-bin | gzip
+  KERNEL_INITRAMFS := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
-  IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi
-  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  IMAGES := sysupgrade.itb
+  IMAGE/sysupgrade.itb := append-kernel | fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | append-metadata
+  ARTIFACTS := ubi-loader.itb
+  ARTIFACT/ubi-loader.itb := uboot-bin xiaomi_redmi-router-ax6s-ubi-loader | lzma | uboot-fit lzma
+ifneq ($(CONFIG_TARGET_ROOTFS_SQUASHFS),)
+  ARTIFACTS += factory.bin
+  ARTIFACT/factory.bin := uboot-bin xiaomi_redmi-router-ax6s-ubi-loader | lzma | uboot-fit lzma | pad-to 512k | ubinize-image fit squashfs-sysupgrade.itb
+endif
+  DEVICE_COMPAT_VERSION := 2.0
+  DEVICE_COMPAT_MESSAGE := Flash layout changes require a manual reinstall using factory.bin.
 endef
-# TARGET_DEVICES += xiaomi_redmi-router-ax6s
+TARGET_DEVICES += xiaomi_redmi-router-ax6s
