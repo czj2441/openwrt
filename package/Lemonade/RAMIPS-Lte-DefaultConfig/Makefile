@@ -37,7 +37,8 @@ define Package/$(PKG_NAME)/install     #把文件 99-xxx 写入 /etc/uci-default
 	$(INSTALL_BIN) ./files/default-settings $(1)/etc/uci-defaults/99-$(PKG_NAME)
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_BIN) ./files/frpc_config $(1)/etc/config/frpc
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/frpc_proc $(1)/etc/init.d/frpc_proc
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
-
