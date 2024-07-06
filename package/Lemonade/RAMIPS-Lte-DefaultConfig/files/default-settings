@@ -64,6 +64,8 @@ uci commit network
 uci set firewall.@zone[1].network=''
 uci add_list firewall.@zone[1].network='rndis'
 uci add_list firewall.@zone[1].network='rndis6'
+uci add_list firewall.@zone[1].network='wan'
+uci add_list firewall.@zone[1].network='wan6'
 uci commit firewall
 
 # 配置DHCP
