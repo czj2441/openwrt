@@ -1,0 +1,170 @@
+#!/bin/sh
+
+# 使用于X86架构网关，双网口无无线.配置仅包含最基础运行条件，可以保证上网和后台访问即可.
+
+# 修改root密码
+sed -i '/root/d' /etc/shadow
+sed -i '1i\root:$1$eBFIgw7B$nvu44KTG1SIzokXTmvysX1:19260:0:99999:7:::' /etc/shadow
+
+# 配置系统时区
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci set system.@system[0].timezone='CST-8'
+uci set system.ntp.server=''
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='time.ustc.edu.cn'
+uci commit system
+
+# 配置网桥端口
+uci del network.@device[-1]
+uci add network device
+uci set network.@device[-1].name='br-lan'
+uci set network.@device[-1].type='bridge'
+uci add_list network.@device[-1].ports='eth1'
+uci commit network
+# 配置局域网(LAN)接口
+uci del network.lan
+uci add network interface
+uci rename network.@interface[-1]='lan'
+uci set network.lan.proto='static'
+uci set network.lan.ipaddr='10.11.12.1'
+uci set network.lan.netmask='255.255.252.0'
+uci set network.lan.ip6assign='64'
+uci set network.lan.ip6hint='0'
+uci set network.lan.device='br-lan'
+uci set network.lan.ip6class='wan6'
+uci commit network
+# 配置上联(WAN)端口
+uci del network.wan
+uci add network interface
+uci rename network.@interface[-1]='wan'
+uci set network.wan.proto='pppoe'
+uci set network.wan.username="28142258"
+uci set network.wan.password="24253132"
+uci set network.wan.ipv6='1'
+uci set network.wan.device='eth0'
+uci commit network
+# 配置上联(WAN6)端口
+uci del network.wan6
+uci add network interface
+uci rename network.@interface[-1]='wan6'
+uci set network.wan6.proto='dhcpv6'
+uci set network.wan6.reqprefix='auto'
+uci set network.wan6.device='@wan'
+uci set network.wan6.reqaddress='try'
+uci commit network
+
+# 配置防火墙
+uci set firewall.@zone[0].network='lan'
+uci add firewall redirect
+uci set firewall.@redirect[-1].target='DNAT'
+uci set firewall.@redirect[-1].src='wan'
+uci set firewall.@redirect[-1].dest='lan'
+uci set firewall.@redirect[-1].proto='tcp udp'
+uci set firewall.@redirect[-1].src_dport='81'
+uci set firewall.@redirect[-1].dest_ip='10.11.12.1'
+uci set firewall.@redirect[-1].dest_port='80'
+uci set firewall.@redirect[-1].name='LemonadeWrt-Panel'
+uci commit firewall
+
+# 配置DHCP
+uci add_list dhcp.@dnsmasq[0].address='/mqtt.ebeam.vip/10.11.12.20'
+uci add_list dhcp.@dnsmasq[0].address='/iotota.ebeam.vip/10.11.13.254'
+uci set dhcp.@dnsmasq[0].quietdhcp='1'
+uci commit dhcp
+# 配置上联(WAN)端口
+uci del dhcp.wan
+uci add dhcp dhcp
+uci set dhcp.@dhcp[-1].interface='wan'
+uci set dhcp.@dhcp[-1].ignore='1'
+uci rename dhcp.@dhcp[-1]='wan'
+uci commit dhcp
+# 配置上联(WAN6)端口
+uci del dhcp.wan6
+uci add dhcp dhcp
+uci set dhcp.@dhcp[-1].interface='wan6'
+uci set dhcp.@dhcp[-1].ignore='1'
+uci set dhcp.@dhcp[-1].master='1'
+uci rename dhcp.@dhcp[-1]='wan6'
+uci commit dhcp
+# 配置局域网(LAN)接口
+uci del dhcp.lan
+uci add dhcp dhcp
+uci set dhcp.@dhcp[-1].interface='lan'
+uci set dhcp.@dhcp[-1].start='10.11.13.1'
+uci set dhcp.@dhcp[-1].limit='253'
+uci set dhcp.@dhcp[-1].dhcpv4='server'
+uci set dhcp.@dhcp[-1].dhcpv6='server'
+uci set dhcp.@dhcp[-1].ndp='relay'
+uci set dhcp.@dhcp[-1].ra='server'
+uci add_list dhcp.@dhcp[-1].ra_flags='managed-config'
+uci add_list dhcp.@dhcp[-1].ra_flags='other-config'
+uci set dhcp.@dhcp[-1].leasetime='30m'
+uci rename dhcp.@dhcp[-1]='lan'
+uci commit dhcp
+
+# wechatpush配置
+uci del wechatpush.config
+uci add wechatpush wechatpush
+uci rename wechatpush.@wechatpush[-1]='config'
+uci set wechatpush.config.enable='1'
+uci set wechatpush.config.sleeptime='60'
+uci set wechatpush.config.debuglevel='1'
+uci set wechatpush.config.up_timeout='2'
+uci set wechatpush.config.down_timeout='10'
+uci set wechatpush.config.timeout_retry_count='2'
+uci set wechatpush.config.thread_num='3'
+uci set wechatpush.config.jsonpath='/usr/share/wechatpush/api/pushplus.json'
+uci set wechatpush.config.pushplus_token='932d43efb790481eaab743968657383d'
+uci set wechatpush.config.device_name='LemonadeWrt'
+uci set wechatpush.config.oui_data='2'
+uci set wechatpush.config.reset_regularly='1'
+uci set wechatpush.config.get_ipv4_mode='1'
+uci set wechatpush.config.ipv4_interface='pppoe-wan'
+uci set wechatpush.config.cpu_notification='load'
+uci set wechatpush.config.cpu_load_threshold='4'
+uci add_list wechatpush.config.login_notification='web_login_failed'
+uci add_list wechatpush.config.login_notification='ssh_login_failed'
+uci set wechatpush.config.login_max_num='5'
+uci set wechatpush.config.login_web_black='1'
+uci set wechatpush.config.login_ip_black_timeout='86400'
+uci set wechatpush.config.crontab_mode='2'
+uci set wechatpush.config.crontab_interval_time='4'
+uci set wechatpush.config.send_title='RouterStatus'
+uci set wechatpush.config.do_not_disturb_mode='2'
+uci set wechatpush.config.do_not_disturb_starttime='0'
+uci set wechatpush.config.do_not_disturb_endtime='7'
+uci set wechatpush.config.login_disturb='1'
+uci add_list wechatpush.config.send_notification='router_status'
+uci add_list wechatpush.config.send_notification='wan_info'
+uci add_list wechatpush.config.send_notification='client_list'
+uci commit wechatpush
+
+# DDNS配置
+uci del ddns.myddns_ipv4
+uci del ddns.myddns_ipv6
+uci del ddns.ebeam_vip
+uci add ddns service
+uci rename ddns.@service[-1]='ebeam_vip'
+uci set ddns.@service[-1].service_name='dnspod.cn'
+uci set ddns.@service[-1].lookup_host='srv.ebeam.vip'
+uci set ddns.@service[-1].enabled='1'
+uci set ddns.@service[-1].use_ipv6='0'
+uci set ddns.@service[-1].domain='srv.ebeam.vip'
+uci set ddns.@service[-1].username='224824'
+uci set ddns.@service[-1].password='702bae3c6a80988814d04f90b6d5dc61'
+uci set ddns.@service[-1].ip_source='network'
+uci set ddns.@service[-1].interface='wan'
+uci set ddns.@service[-1].ip_network='wan'
+uci set ddns.@service[-1].check_interval='5'
+uci set ddns.@service[-1].check_unit='minutes'
+uci set ddns.@service[-1].force_interval='3'
+uci set ddns.@service[-1].force_unit='days'
+uci set ddns.@service[-1].retry_interval='30'
+uci set ddns.@service[-1].retry_unit='seconds'
+uci set ddns.@service[-1].use_syslog='2'
+uci commit ddns
+/etc/init.d/ddns enable
+/etc/init.d/ddns restart
+
+#详见： https://openwrt.org/docs/guide-developer/uci-defaults
+exit 0
