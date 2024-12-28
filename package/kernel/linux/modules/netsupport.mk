@@ -42,6 +42,24 @@ endef
 $(eval $(call KernelPackage,atmtcp))
 
 
+define KernelPackage/appletalk
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=Appletalk protocol support
+  KCONFIG:= \
+        CONFIG_ATALK \
+        CONFIG_DEV_APPLETALK \
+        CONFIG_IPDDP=n
+  FILES:=$(LINUX_DIR)/net/appletalk/appletalk.ko
+  AUTOLOAD:=$(call AutoLoad,40,appletalk)
+endef
+
+define KernelPackage/appletalk/description
+  Kernel module for AppleTalk protocol.
+endef
+
+$(eval $(call KernelPackage,appletalk))
+
+
 define KernelPackage/bonding
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Ethernet bonding driver
@@ -910,7 +928,6 @@ $(eval $(call KernelPackage,sched-ipset))
 define KernelPackage/sched-mqprio-common
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=mqprio queue common dependencies support
-  DEPENDS:=@LINUX_6_6
   HIDDEN:=1
   KCONFIG:=CONFIG_NET_SCH_MQPRIO_LIB
   FILES:=$(LINUX_DIR)/net/sched/sch_mqprio_lib.ko
@@ -926,7 +943,7 @@ $(eval $(call KernelPackage,sched-mqprio-common))
 define KernelPackage/sched-mqprio
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Multi-queue priority scheduler (MQPRIO)
-  DEPENDS:=+kmod-sched-core +LINUX_6_6:kmod-sched-mqprio-common
+  DEPENDS:=+kmod-sched-core +kmod-sched-mqprio-common
   KCONFIG:=CONFIG_NET_SCH_MQPRIO
   FILES:=$(LINUX_DIR)/net/sched/sch_mqprio.ko
   AUTOLOAD:=$(call AutoProbe, sch_mqprio)
@@ -1361,7 +1378,7 @@ define KernelPackage/9pnet
   KCONFIG:= \
 	CONFIG_NET_9P \
 	CONFIG_NET_9P_DEBUG=n \
-	CONFIG_NET_9P_FD=n@ge5.17
+	CONFIG_NET_9P_FD=n
   FILES:= \
 	$(LINUX_DIR)/net/9p/9pnet.ko
   AUTOLOAD:=$(call AutoLoad,29,9pnet)
@@ -1493,6 +1510,23 @@ native Linux tools such as ss.
 endef
 
 $(eval $(call KernelPackage,inet-diag))
+
+
+define KernelPackage/inet-mptcp-diag
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=INET diag support for MultiPath TCP
+  DEPENDS:=@KERNEL_MPTCP +kmod-inet-diag
+  KCONFIG:=CONFIG_INET_MPTCP_DIAG
+  FILES:=$(LINUX_DIR)/net/mptcp/mptcp_diag.ko
+  AUTOLOAD:=$(call AutoProbe,mptcp_diag)
+endef
+
+define KernelPackage/inet-mptcp-diag/description
+Support for INET (MultiPath TCP) socket monitoring interface used by
+native Linux tools such as ss.
+endef
+
+$(eval $(call KernelPackage,inet-mptcp-diag))
 
 
 define KernelPackage/xdp-sockets-diag

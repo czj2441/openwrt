@@ -5,6 +5,7 @@
 #include "armada-7040.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
 
 / {
 	model = "MikroTik RB5009";
@@ -25,6 +26,7 @@
 		led-failsafe = &led_user;
 		led-running = &led_user;
 		led-upgrade = &led_user;
+		label-mac-device = &p1;
 	};
 
 	usb3_vbus: regulator-usb3-vbus0 {
@@ -71,23 +73,27 @@
 		compatible = "gpio-leds";
 
 		led_user: user {
-			label = "green:user";
+			function = "user";
 			gpios = <&cp0_gpio2 26 GPIO_ACTIVE_LOW>;
+			color = <LED_COLOR_ID_GREEN>;
 		};
 
 		sfp {
-			label = "green:sfp";
+			function = "sfp";
 			gpios = <&cp0_gpio2 25 GPIO_ACTIVE_LOW>;
+			color = <LED_COLOR_ID_GREEN>;
 		};
 
 		hdr1 {
-			label = "blue:hdr1";
+			function = "hdr1";
 			gpios = <&cp0_gpio1 4 GPIO_ACTIVE_LOW>;
+			color = <LED_COLOR_ID_BLUE>;
 		};
 
 		hdr2 {
-			label = "blue:hdr2";
+			function = "hdr2";
 			gpios = <&cp0_gpio2 19 GPIO_ACTIVE_LOW>;
+			color = <LED_COLOR_ID_BLUE>;
 		};
 	};
 
@@ -159,9 +165,12 @@
 
 			/* Empty space on NOR repurposed for U-Boot environment */
 			partition@fe0000 {
-				compatible = "u-boot,env";
 				label = "u-boot-env";
 				reg = <0xfe0000 0x20000>;
+
+				nvmem-layout {
+					compatible = "u-boot,env";
+				};
 			};
 		};
 	};
@@ -317,7 +326,7 @@
 				nvmem-cell-names = "mac-address";
 			};
 
-			port@9 {
+			p1: port@9 {
 				reg = <9>;
 				label = "p1";
 				phy-mode = "sgmii";
@@ -378,6 +387,19 @@
 
 			qca8081: qca8081@0 {
 				reg = <0>;
+
+				leds {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					led@1 {
+						reg = <1>;
+						color = <LED_COLOR_ID_GREEN>;
+						function = LED_FUNCTION_WAN;
+						default-state = "keep";
+						active-low;
+					};
+				};
 			};
 		};
 	};

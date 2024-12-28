@@ -18,7 +18,9 @@ asus,rt-n11p-b1|\
 asus,rt-n12-vp-b1|\
 netgear,r6020|\
 netgear,r6080|\
-netgear,r6120)
+netgear,r6120|\
+yuncore,cpe200|\
+yuncore,m300)
 	ucidef_set_led_switch "lan" "lan" "green:lan" "switch0" "0xf"
 	ucidef_set_led_switch "wan" "wan" "green:wan" "switch0" "0x10"
 	;;
@@ -171,7 +173,8 @@ wavlink,wl-wn578a2)
 	ucidef_set_led_switch "wan" "wan" "green:wan" "switch0" "0x10"
 	;;
 xiaomi,mi-router-4a-100m|\
-xiaomi,mi-router-4a-100m-intl)
+xiaomi,mi-router-4a-100m-intl|\
+xiaomi,mi-router-4a-100m-intl-v2)
 	ucidef_set_led_switch "wan" "WAN" "blue:wan" "switch0" "0x01"
 	;;
 xiaomi,mi-router-4c)
@@ -182,6 +185,13 @@ zbtlink,zbt-we1226)
 	ucidef_set_led_switch "lan1" "LAN1" "green:lan1" "switch0" "0x01"
 	ucidef_set_led_switch "lan2" "LAN2" "green:lan2" "switch0" "0x02"
 	ucidef_set_led_switch "wan" "WAN" "green:wan" "switch0" "0x10"
+	;;
+zbtlink,zbt-we2426-b)
+	ucidef_set_led_switch "wan" "wan" "green:wan" "switch0" "0x10"
+	ucidef_set_led_switch "lan1" "lan1" "green:lan-1" "switch0" "0x01"
+	ucidef_set_led_switch "lan2" "lan2" "green:lan-2" "switch0" "0x02"
+	ucidef_set_led_switch "lan3" "lan3" "green:lan-3" "switch0" "0x04"
+	ucidef_set_led_switch "lan4" "lan4" "green:lan-4" "switch0" "0x08"
 	;;
 zyxel,keenetic-extra-ii)
 	ucidef_set_led_netdev "wifi_led" "wifi" "green:wifi" "wlan0"

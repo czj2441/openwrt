@@ -51,12 +51,6 @@
 			gpio-export,output = <0>;
 			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
 		};
-
-		sdpower {
-			gpio-export,name = "sdpower";
-			gpio-export,output = <0>;
-			gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
-		};
 	};
 };
 
@@ -92,6 +86,12 @@
 
 &gsw {
 	mediatek,ephy-base = /bits/ 8 <12>;
+};
+
+&mmc_reg_3v3 {
+	/delete-property/ enable-active-high;
+
+	gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
 };
 
 &pcie {

@@ -74,6 +74,7 @@ platform_do_upgrade() {
 	asus,rt-ac85p|\
 	asus,rt-ax53u|\
 	asus,rt-ax54|\
+	asus,4g-ax56|\
 	beeline,smartbox-flash|\
 	beeline,smartbox-giga|\
 	beeline,smartbox-pro|\
@@ -85,21 +86,27 @@ platform_do_upgrade() {
 	dlink,dir-1960-a1|\
         dlink,dir-2055-a1|\
 	dlink,dir-2150-a1|\
+	dlink,dir-2150-r1|\
 	dlink,dir-2640-a1|\
 	dlink,dir-2660-a1|\
 	dlink,dir-3040-a1|\
 	dlink,dir-3060-a1|\
 	dlink,dir-853-a3|\
+	elecom,wmc-x1800gst|\
+	elecom,wsc-x1800gs|\
 	etisalat,s3|\
 	h3c,tx1800-plus|\
 	h3c,tx1801-plus|\
 	h3c,tx1806|\
 	haier,har-20s2u1|\
 	hiwifi,hc5962|\
+	gemtek,wvrtm-127acn|\
+	gemtek,wvrtm-130acn|\
 	iptime,a3004t|\
 	iptime,ax2004m|\
 	iptime,t5004|\
 	jcg,q20|\
+	keenetic,kn-3510|\
 	linksys,e5600|\
 	linksys,e7350|\
 	linksys,ea6350-v4|\
@@ -122,6 +129,8 @@ platform_do_upgrade() {
 	netgear,wac104|\
 	netgear,wac124|\
 	netgear,wax202|\
+	netgear,wax214v2|\
+	netis,n6|\
 	netis,wf2881|\
 	raisecom,msg1500-x-00|\
 	rostelecom,rt-fe-1a|\
@@ -147,6 +156,9 @@ platform_do_upgrade() {
 	buffalo,wsr-2533dhpl2|\
 	buffalo,wsr-2533dhpls)
 		buffalo_do_upgrade "$1"
+		;;
+	dna,valokuitu-plus-ex400)
+		dna_do_upgrade "$1"
 		;;
 	elecom,wrc-x1800gs)
 		[ "$(fw_printenv -n bootmenu_delay)" != "0" ] || \

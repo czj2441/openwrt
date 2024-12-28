@@ -145,7 +145,7 @@
 	flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0>;
-		spi-max-frequency = <70000000>;
+		spi-max-frequency = <50000000>;
 
 		partitions {
 			compatible = "fixed-partitions";
@@ -164,7 +164,6 @@
 			};
 
 			partition@40000 {
-				compatible = "nvmem-cells";
 				label = "factory";
 				reg = <0x40000 0x10000>;
 				read-only;

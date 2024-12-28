@@ -12,25 +12,8 @@ platform_do_upgrade() {
 	ubnt,unifi-6-lr-v2-ubootmod|\
 	ubnt,unifi-6-lr-v3-ubootmod|\
 	xiaomi,redmi-router-ax6s)
-		[ -e /dev/fit0 ] && fitblk /dev/fit0
-		[ -e /dev/fitrw ] && fitblk /dev/fitrw
-		bootdev="$(fitblk_get_bootdev)"
-		case "$bootdev" in
-		mmcblk*)
-			EMMC_KERN_DEV="/dev/$bootdev"
-			emmc_do_upgrade "$1"
-			;;
-		mtdblock*)
-			PART_NAME="/dev/mtd${bootdev:8}"
-			default_do_upgrade "$1"
-			;;
-		ubiblock*)
-			CI_KERNPART="fit"
-			nand_do_upgrade "$1"
-			;;
-		esac
+		fit_do_upgrade "$1"
 		;;
-
 	buffalo,wsr-2533dhp2|\
 	buffalo,wsr-3200ax4s)
 		local magic="$(get_magic_long "$1")"
@@ -60,6 +43,11 @@ platform_do_upgrade() {
 		fi
 		default_do_upgrade "$1"
 		;;
+	smartrg,sdg-841-t6)
+		CI_KERNPART="boot"
+		CI_ROOTPART="res1"
+		emmc_do_upgrade "$1"
+		;;
 	*)
 		default_do_upgrade "$1"
 		;;
@@ -84,6 +72,7 @@ platform_check_image() {
 	elecom,wrc-x3200gst3|\
 	mediatek,mt7622-rfb1-ubi|\
 	netgear,wax206|\
+	smartrg,sdg-841-t6|\
 	totolink,a8000ru)
 		nand_do_platform_check "$board" "$1"
 		return $?
@@ -103,9 +92,12 @@ platform_check_image() {
 platform_copy_config() {
 	case "$(board_name)" in
 	bananapi,bpi-r64)
-		if fitblk_get_bootdev | grep -q mmc; then
+		if [ "$CI_METHOD" = "emmc" ]; then
 			emmc_copy_config
 		fi
+		;;
+	smartrg,sdg-841-t6)
+		emmc_copy_config
 		;;
 	esac
 }

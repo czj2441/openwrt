@@ -52,6 +52,17 @@ define Build/mt7622-gpt
 	rm $@.tmp
 endef
 
+define Device/smartrg_sdg-841-t6
+  DEVICE_VENDOR := Adtran
+  DEVICE_DTS_DIR := ../dts
+  DEVICE_PACKAGES := e2fsprogs f2fsck mkf2fs
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEVICE_MODEL := SDG-841-t6
+  DEVICE_DTS := mt7622-smartrg-SDG-841-t6
+  DEVICE_PACKAGES += kmod-mt7915e kmod-mt7915-firmware
+endef
+TARGET_DEVICES += smartrg_sdg-841-t6
+
 define Device/bananapi_bpi-r64
   DEVICE_VENDOR := Bananapi
   DEVICE_MODEL := BPi-R64
@@ -328,7 +339,7 @@ TARGET_DEVICES += totolink_a8000ru
 
 define Device/ubnt_unifi-6-lr-v1
   DEVICE_VENDOR := Ubiquiti
-  DEVICE_MODEL := UniFi 6 LR
+  DEVICE_MODEL := UniFi U6 Long-Range
   DEVICE_VARIANT := v1
   DEVICE_DTS_CONFIG := config@1
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v1
@@ -340,7 +351,7 @@ TARGET_DEVICES += ubnt_unifi-6-lr-v1
 
 define Device/ubnt_unifi-6-lr-v1-ubootmod
   DEVICE_VENDOR := Ubiquiti
-  DEVICE_MODEL := UniFi 6 LR
+  DEVICE_MODEL := UniFi U6 Long-Range
   DEVICE_VARIANT := v1 U-Boot mod
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v1-ubootmod
   DEVICE_DTS_DIR := ../dts
@@ -359,7 +370,7 @@ TARGET_DEVICES += ubnt_unifi-6-lr-v1-ubootmod
 
 define Device/ubnt_unifi-6-lr-v2
   DEVICE_VENDOR := Ubiquiti
-  DEVICE_MODEL := UniFi 6 LR
+  DEVICE_MODEL := UniFi U6 Long-Range
   DEVICE_VARIANT := v2
   DEVICE_DTS_CONFIG := config@1
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v2
@@ -370,7 +381,7 @@ TARGET_DEVICES += ubnt_unifi-6-lr-v2
 
 define Device/ubnt_unifi-6-lr-v2-ubootmod
   DEVICE_VENDOR := Ubiquiti
-  DEVICE_MODEL := UniFi 6 LR
+  DEVICE_MODEL := UniFi U6 Long-Range
   DEVICE_VARIANT := v2 U-Boot mod
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v2-ubootmod
   DEVICE_DTS_DIR := ../dts
@@ -388,7 +399,7 @@ TARGET_DEVICES += ubnt_unifi-6-lr-v2-ubootmod
 
 define Device/ubnt_unifi-6-lr-v3
   DEVICE_VENDOR := Ubiquiti
-  DEVICE_MODEL := UniFi 6 LR
+  DEVICE_MODEL := UniFi U6 Long-Range
   DEVICE_VARIANT := v3
   DEVICE_DTS_CONFIG := config@1
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v3
@@ -399,7 +410,7 @@ TARGET_DEVICES += ubnt_unifi-6-lr-v3
 
 define Device/ubnt_unifi-6-lr-v3-ubootmod
   DEVICE_VENDOR := Ubiquiti
-  DEVICE_MODEL := UniFi 6 LR
+  DEVICE_MODEL := UniFi U6 Long-Range
   DEVICE_VARIANT := v3 U-Boot mod
   DEVICE_DTS := mt7622-ubnt-unifi-6-lr-v3-ubootmod
   DEVICE_DTS_DIR := ../dts

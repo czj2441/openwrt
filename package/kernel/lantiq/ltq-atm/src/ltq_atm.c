@@ -1782,7 +1782,10 @@ static int ltq_atm_probe(struct platform_device *pdev)
 		goto INIT_PRIV_DATA_FAIL;
 	}
 
-	ops->init(pdev);
+	ret = ops->init(pdev);
+	if (ret)
+		return ret;
+
 	init_rx_tables();
 	init_tx_tables();
 
@@ -1891,7 +1894,6 @@ static struct platform_driver ltq_atm_driver = {
 	.remove = ltq_atm_remove,
 	.driver = {
 		.name = "atm",
-		.owner = THIS_MODULE,
 		.of_match_table = ltq_atm_match,
 	},
 };

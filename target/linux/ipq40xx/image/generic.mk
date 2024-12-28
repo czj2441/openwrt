@@ -179,12 +179,14 @@ endef
 define Device/aruba_ap-303
 	$(call Device/aruba_glenmorangie)
 	DEVICE_MODEL := AP-303
+	DEVICE_DTS_CONFIG := Glenmorangie@1
 endef
 TARGET_DEVICES += aruba_ap-303
 
 define Device/aruba_ap-303h
 	$(call Device/aruba_glenmorangie)
 	DEVICE_MODEL := AP-303H
+	DEVICE_DTS_CONFIG := Aberlour@1
 endef
 TARGET_DEVICES += aruba_ap-303h
 
@@ -192,6 +194,7 @@ define Device/aruba_ap-365
 	$(call Device/aruba_glenmorangie)
 	DEVICE_MODEL := AP-365
 	DEVICE_PACKAGES := kmod-hwmon-ad7418
+	DEVICE_DTS_CONFIG := Bunker@1
 endef
 TARGET_DEVICES += aruba_ap-365
 
@@ -539,7 +542,6 @@ define Device/extreme-networks_ws-ap3915i
 	DEVICE_MODEL := WS-AP3915i
 	IMAGE_SIZE := 30080k
 	SOC := qcom-ipq4029
-	BLOCKSIZE := 128k
 	IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | check-size | append-metadata
 endef
 TARGET_DEVICES += extreme-networks_ws-ap3915i
@@ -1089,6 +1091,19 @@ define Device/qxwlan_e2600ac-c2
 endef
 TARGET_DEVICES += qxwlan_e2600ac-c2
 
+define Device/skspruce_wia3300-20
+	$(call Device/FitzImage)
+	BLOCKSIZE := 64k
+	IMAGE_SIZE := 55104k
+	SOC := qcom-ipq4019
+	DEVICE_VENDOR := SKSpruce
+	DEVICE_MODEL := WIA3300-20
+	DEVICE_PACKAGES := -ath10k-board-qca4019 ipq-wifi-skspruce_wia3300-20
+	IMAGE/sysupgrade.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | \
+		append-rootfs | pad-rootfs | check-size | append-metadata
+endef
+TARGET_DEVICES +=skspruce_wia3300-20
+
 define Device/sony_ncp-hg100-cellular
 	$(call Device/FitImage)
 	DEVICE_VENDOR := Sony
@@ -1130,7 +1145,7 @@ define Device/teltonika_rutx50
 	PAGESIZE := 2048
 	FILESYSTEMS := squashfs
 	IMAGE/factory.ubi := append-ubi
-	DEVICE_PACKAGES := ipq-wifi-teltonika_rutx kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi
+	DEVICE_PACKAGES := kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi
 endef
 TARGET_DEVICES += teltonika_rutx50
 
@@ -1279,7 +1294,7 @@ TARGET_DEVICES += zte_mf289f
 
 define Device/zyxel_nbg6617
 	$(call Device/FitImageLzma)
-	DEVICE_VENDOR := ZyXEL
+	DEVICE_VENDOR := Zyxel
 	DEVICE_MODEL := NBG6617
 	SOC := qcom-ipq4018
 	KERNEL_SIZE := 4096k
@@ -1289,7 +1304,7 @@ define Device/zyxel_nbg6617
 	RAS_VERSION := "$(VERSION_DIST) $(REVISION)"
 	IMAGE/sysupgrade.bin := append-kernel | append-rootfs | pad-rootfs | append-metadata
 	IMAGES += factory.bin
-#	The ZyXEL firmware allows flashing thru the web-gui only when the rootfs is
+#	The Zyxel firmware allows flashing thru the web-gui only when the rootfs is
 #	at least as large as the one of the initial firmware image (not the current
 #	one on the device). This only applies to the Web-UI, the bootlaoder ignores
 #	this minimum-size. However, the larger image can be flashed both ways.
@@ -1301,7 +1316,7 @@ TARGET_DEVICES += zyxel_nbg6617
 
 define Device/zyxel_wre6606
 	$(call Device/FitImage)
-	DEVICE_VENDOR := ZyXEL
+	DEVICE_VENDOR := Zyxel
 	DEVICE_MODEL := WRE6606
 	DEVICE_DTS_CONFIG := config@4
 	SOC := qcom-ipq4018

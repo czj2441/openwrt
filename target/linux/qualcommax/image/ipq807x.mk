@@ -1,3 +1,28 @@
+DEVICE_VARS += NETGEAR_BOARD_ID NETGEAR_HW_ID
+
+define Build/asus-fake-ramdisk
+	rm -rf $(KDIR)/tmp/fakerd
+	dd if=/dev/zero bs=32 count=1 > $(KDIR)/tmp/fakerd
+	$(info KERNEL_INITRAMFS is $(KERNEL_INITRAMFS))
+endef
+
+define Build/asus-fake-rootfs
+	$(eval comp=$(word 1,$(1)))
+	$(eval filepath=$(word 2,$(1)))
+	$(eval filecont=$(word 3,$(1)))
+	rm -rf $(KDIR)/tmp/fakefs $(KDIR)/tmp/fakehsqs
+	mkdir -p $(KDIR)/tmp/fakefs/$$(dirname $(filepath))
+	echo '$(filecont)' > $(KDIR)/tmp/fakefs/$(filepath)
+	$(STAGING_DIR_HOST)/bin/mksquashfs4 $(KDIR)/tmp/fakefs $(KDIR)/tmp/fakehsqs -comp $(comp) \
+		-b 4096 -no-exports -no-sparse -no-xattrs -all-root -noappend \
+		$(wordlist 4,$(words $(1)),$(1))
+endef
+
+define Build/asus-trx
+	$(STAGING_DIR_HOST)/bin/asusuimage $(wordlist 1,$(words $(1)),$(1)) -i $@ -o $@.new
+	mv $@.new $@
+endef
+
 define Build/wax6xx-netgear-tar
 	mkdir $@.tmp
 	mv $@ $@.tmp/nand-ipq807x-apps.img
@@ -21,6 +46,34 @@ define Device/arcadyan_aw1000
 		kmod-gpio-nxp-74hc164 kmod-usb-serial-option uqmi
 endef
 TARGET_DEVICES += arcadyan_aw1000
+
+define Device/asus_rt-ax89x
+	DEVICE_VENDOR := Asus
+	DEVICE_MODEL := RT-AX89X
+	BLOCKSIZE := 128k
+	PAGESIZE := 2048
+	DEVICE_DTS_CONFIG := config@hk01
+	SOC := ipq8074
+	DEVICE_PACKAGES := kmod-hwmon-gpiofan ipq-wifi-asus_rt-ax89x
+	KERNEL_NAME := vmlinux
+	KERNEL := kernel-bin | libdeflate-gzip
+	KERNEL_IN_UBI := 1
+	IMAGE/sysupgrade.bin/squashfs := \
+		append-kernel | asus-fake-ramdisk |\
+		multiImage gzip $$(KDIR)/tmp/fakerd $$(KDIR)/image-$$(DEVICE_DTS).dtb |\
+		sysupgrade-tar kernel=$$$$@ | append-metadata
+ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
+	ARTIFACTS := initramfs-factory.trx initramfs-uImage.itb
+	ARTIFACT/initramfs-uImage.itb := \
+		append-image-stage initramfs-kernel.bin | fit gzip $$(KDIR)/image-$$(DEVICE_DTS).dtb
+	ARTIFACT/initramfs-factory.trx := \
+		append-image-stage initramfs-kernel.bin |\
+		asus-fake-rootfs xz /lib/firmware/IPQ8074A/fw_version.txt "fake" -no-compression |\
+		multiImage gzip $$(KDIR)/tmp/fakehsqs $$(KDIR)/image-$$(DEVICE_DTS).dtb |\
+		asus-trx -v 2 -n RT-AX89U -b 388 -e 49000
+endif
+endef
+TARGET_DEVICES += asus_rt-ax89x
 
 define Device/buffalo_wxr-5950ax12
 	$(call Device/FitImage)
@@ -162,10 +215,12 @@ define Device/netgear_rax120v2
 	NETGEAR_HW_ID := 29765589+0+512+1024+4x4+8x8
 	DEVICE_PACKAGES := ipq-wifi-netgear_rax120v2 kmod-spi-gpio \
 		kmod-spi-bitbang kmod-gpio-nxp-74hc164 kmod-hwmon-g762
+ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
 	IMAGES += web-ui-factory.img
 	IMAGE/web-ui-factory.img := append-image initramfs-uImage.itb | \
 		pad-offset $$$$(BLOCKSIZE) 64 | append-uImage-fakehdr filesystem | \
 		netgear-dni
+endif
 	IMAGE/sysupgrade.bin := append-kernel | pad-offset $$$$(BLOCKSIZE) 64 | \
 		append-uImage-fakehdr filesystem | sysupgrade-tar kernel=$$$$@ | \
 		append-metadata
@@ -255,7 +310,7 @@ define Device/prpl_haze
 	DEVICE_DTS_CONFIG := config@hk09
 	SOC := ipq8072
 	DEVICE_PACKAGES := ath11k-firmware-qcn9074 ipq-wifi-prpl_haze kmod-ath11k-pci \
-		mkf2fs f2fsck kmod-fs-f2fs kmod-leds-lp5562
+		kmod-fs-f2fs f2fs-tools kmod-leds-lp5562
 endef
 TARGET_DEVICES += prpl_haze
 
@@ -267,7 +322,7 @@ define Device/qnap_301w
 	DEVICE_DTS_CONFIG := config@hk01
 	KERNEL_SIZE := 16384k
 	SOC := ipq8072
-	DEVICE_PACKAGES := ipq-wifi-qnap_301w
+	DEVICE_PACKAGES := kmod-fs-f2fs f2fs-tools ipq-wifi-qnap_301w
 endef
 TARGET_DEVICES += qnap_301w
 
@@ -287,9 +342,37 @@ define Device/spectrum_sax1v1k
 	DEVICE_DTS_CONFIG := config@rt5010w-d187-rev6
 	SOC := ipq8072
 	IMAGES := sysupgrade.bin
-	DEVICE_PACKAGES := ipq-wifi-spectrum_sax1v1k
+	DEVICE_PACKAGES := kmod-fs-f2fs f2fs-tools ipq-wifi-spectrum_sax1v1k
 endef
 TARGET_DEVICES += spectrum_sax1v1k
+
+define Device/tplink_eap620hd-v1
+	$(call Device/FitImage)
+	$(call Device/UbiFit)
+	DEVICE_VENDOR := TP-Link
+	DEVICE_MODEL := EAP620 HD
+	DEVICE_VARIANT := v1
+	BLOCKSIZE := 128k
+	PAGESIZE := 2048
+	SOC := ipq8072
+	DEVICE_PACKAGES := ipq-wifi-tplink_eap620hd-v1
+	TPLINK_SUPPORT_STRING := SupportList:\r\nEAP620 HD(TP-Link|UN|AX1800-D):1.0\r\n
+endef
+TARGET_DEVICES += tplink_eap620hd-v1
+
+define Device/tplink_eap660hd-v1
+	$(call Device/FitImage)
+	$(call Device/UbiFit)
+	DEVICE_VENDOR := TP-Link
+	DEVICE_MODEL := EAP660 HD
+	DEVICE_VARIANT := v1
+	BLOCKSIZE := 128k
+	PAGESIZE := 2048
+	SOC := ipq8072
+	DEVICE_PACKAGES := ipq-wifi-tplink_eap660hd-v1
+	TPLINK_SUPPORT_STRING := SupportList:\r\nEAP660 HD(TP-Link|UN|AX3600-D):1.0\r\n
+endef
+TARGET_DEVICES += tplink_eap660hd-v1
 
 define Device/xiaomi_ax3600
 	$(call Device/FitImage)
@@ -379,7 +462,7 @@ define Device/zyxel_nbg7815
 	DEVICE_MODEL := NBG7815
 	DEVICE_DTS_CONFIG := config@nbg7815
 	SOC := ipq8074
-	DEVICE_PACKAGES := ipq-wifi-zyxel_nbg7815 kmod-ath11k-pci \
+	DEVICE_PACKAGES := kmod-fs-f2fs f2fs-tools ipq-wifi-zyxel_nbg7815 kmod-ath11k-pci \
 		kmod-bluetooth kmod-hwmon-tmp103
 endef
 TARGET_DEVICES += zyxel_nbg7815

@@ -6,11 +6,7 @@ define Device/Default
   PROFILES := Default
   FILESYSTEMS := squashfs
   IMAGES := firmware.bin sysupgrade.bin
-ifdef CONFIG_LINUX_6_1
-  DEVICE_DTS_DIR := $(DTS_DIR)
-else
   DEVICE_DTS_DIR := $(DTS_DIR)/nxp/ls
-endif
   KERNEL := kernel-bin | uImage none
   KERNEL_INITRAMFS = kernel-bin | gzip | fit gzip $$(DEVICE_DTS_DIR)/$$(DEVICE_DTS).dtb
   KERNEL_NAME := zImage
@@ -35,7 +31,7 @@ define Device/fsl_ls1021a-twr
   DEVICE_VENDOR := NXP
   DEVICE_MODEL := TWR-LS1021A
   DEVICE_VARIANT := Default
-  DEVICE_PACKAGES += layerscape-rcw
+  DEVICE_PACKAGES += ~layerscape-rcw
   IMAGE/firmware.bin := \
     ls-clean | \
     ls-append $(1)-rcw.bin | pad-to 1M | \
