@@ -1,0 +1,9 @@
+[submodule "luci-app-onliner"]
+	path = package/luci-app-onliner
+	url = https://github.com/ElvenP/luci-app-onliner.git
+[submodule "package/luci-theme-argon"]
+	path = package/luci-theme-argon
+	url = https://github.com/jerrykuku/luci-theme-argon
+[submodule "package/luci-app-argon-config"]
+	path = package/luci-app-argon-config
+	url = https://github.com/jerrykuku/luci-app-argon-config
